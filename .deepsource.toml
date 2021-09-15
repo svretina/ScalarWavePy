@@ -5,7 +5,7 @@ test_patterns = [
   "test_*.py"
 ]
 
-exclude_patterns = ["*ini"]
+exclude_patterns = ["*ini","*sh","*so"]
 
 [[analyzers]]
 name = "python"
