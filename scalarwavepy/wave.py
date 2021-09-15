@@ -20,7 +20,7 @@ class ScalarWave:
         self.t = self.discreatize(t0, nt, dt)
         self.u = np.zeros((nx,nt))
 
-    def discreatize(self,u0, nu, du):
+    def discretize(self,u0, nu, du):
         uf = u0 + nu * du
         u = np.arange(u0, uf, du)
         return u
