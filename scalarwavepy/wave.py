@@ -113,13 +113,4 @@ class ScalarWave:
             self.calculate_outer_boundaries(j)
             self.calculate_ghost_points(j)
 
-        # plt.plot(self.mesh.x[0], self.u[0][:,5],'r')
-        # plt.plot(self.mesh.x[self.lastkey],
-        #          self.u[self.lastkey][:,5],'r')
-
-        # plt.plot(self.mesh.x[0], self.u[0][:,50],'g')
-        # plt.plot(self.mesh.x[self.lastkey],
-        #          self.u[self.lastkey][:,50],'g')
-        # plt.show()
-        # exit()
         print("Done")
