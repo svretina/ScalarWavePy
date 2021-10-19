@@ -1,77 +1,120 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from scalarwavepy import wave as w
-from scalarwavepy import mesh as m
+from scalarwavepy import ode
+from scalarwavepy import wave
+from scalarwavepy import utils
+from scalarwavepy import analytic
+from scalarwavepy import plotmod as pltm
 
 import matplotlib.pyplot as plt
 import os
-from scipy.stats import norm
+import math
+
+ampl = 8
+sigma = 1 / 100
+cntr = 0.8
+
+pulse = analytic.Gaussian(cntr, ampl, sigma)
 
 
-def gaussian_pulse(x, x0=0.2):
-    rv = norm(loc=x0, scale=0.05)
-    pulse = rv.pdf(x)
-    return pulse
+def convergence(dx_0, tf, t_eval, n=5, plot_convergence=False):
+    pold = np.nan
+    dxs = []
+    pis = []
+    xis = []
+    courant_factor = 0.4
+    factor = 2 * np.linspace(1, n, n)
+    for i in factor:
+        dxprime = dx / i
+
+        w = wave.ScalarWave(
+            pulse,
+            dx=dxprime,
+            t_final=tf,
+            courant_factor=courant_factor,
+        )
+        idx_eval = int(np.round(t_eval / w.dt, 1))
+        state_vector = w.evolve()
+        numpi = state_vector[1, 0::i, idx_eval]
+        numxi = state_vector[2, 0::i, idx_eval]
+
+        analyticpi = pulse.expr_dt(w.x[0::i], w.t[idx_eval])
+        analyticxi = pulse.expr_dx(w.x[0::i], w.t[idx_eval])
+
+        diffpi = utils.L2_norm(dxprime, numpi - analyticpi)
+        diffxi = utils.L2_norm(dxprime, numxi - analyticxi)
+
+        pis.append(diffpi)
+        xis.append(diffxi)
+        dxs.append(dxprime)
+
+        # try:
+        #     p2 = math.log(diffpiold / diffpi, i / (i - step))
+        #     p3 = math.log(diffxiold / diffxi, i / (i - step))
+        #     # print(f"pi convergence: {p2}")
+        #     # print(f"xi convergence: {p3}")
+        # except:
+        #     pass
+        # diffpiold = diffpi
+        # diffxiold = diffxi
+
+    pi_line = np.polyfit(np.log(dxs), np.log(pis), 1)
+    xi_line = np.polyfit(np.log(dxs), np.log(xis), 1)
+
+    if plot_convergence:
+        pltm.plot_convergence(
+            dxs, pis, xis, pi_line, xi_line, w.t[idx_eval]
+        )
+    return pi_line, xi_line
 
 
-def gaussian_pulse_t(c, x, t=0, x0=0.2):
-    rv = norm(loc=x0 + c * t, scale=0.05)
-    pulse = rv.pdf(x)
-    return pulse
+def convergence_over_time(dx_0, tf, plot=False):
+    pi_convergence = []
+    xi_convergence = []
+    time = utils.discretize(0, tf, 0.4 * dx_0)
+    for i in range(1, len(time)):
+        print(f"time[{i}] = {time[i]}")
+        piline, xiline = convergence(dx_0, tf, time[i], False)
+        pi_convergence.append(piline[0])
+        xi_convergence.append(xiline[0])
+    if plot:
+        pltm.plot_convergence_over_time(
+            time[1:], pi_convergence, xi_convergence
+        )
+    return pi_convergence, xi_convergence
 
 
-exc = (150, 200, 250, 300)
-dx = 1 / 299
-nx = 500
-dt = w.set_dt_from_courant(0.4, dx)
-nt = int((nx * dx) / dt)
-alpha = 1
+dx = 1 / 100
+tf = 2
 
-msh = m.Mesh(dx, nx, exc)
+# pi_convs, xi_convs = convergence_over_time(dx, tf, True)
+# print("fit pi:", piline)
+# print("fit xi:", xiline)
 
-wave = w.ScalarWave(msh, alpha, dt, nt, gaussian_pulse_t, gaussian_pulse_t)
-# print(wave.u)
-wave.initialize_solution()
-wave.initialize_exc_boundary()
-wave.initialize_ghost_points()
-wave.solve()
+# energy_density = ode.calculate_diagnostics(dxprime, state_vector)
 
-sol = wave.u
-x = msh.x
-t = wave.t
+# plt.plot(t, energy_density)
+# plt.savefig("energy_density.png")
+# plt.clf()
 
-# compare at x-slice
-# there's a small difference between numerical and theoretical
-# solution, like a timeshift
+# plt.plot(t, utils.L2_norm(dx, state_vector[0]))
+# plt.savefig("l2norm.png")
+# plt.clf()
+w = wave.ScalarWave(
+    pulse,
+    dx=dx,
+    t_final=4 * tf,
+    courant_factor=0.4,
+)
+w.evolve()
+pltm.plot_time_evolution(w, pulse, gif=True)
 
-# sol2 = gaussian_pulse_t(alpha, x[0][150], t=t)
-# plt.plot(t, sol[0][150,:],'rx')
-# plt.plot(t, sol2,"o")
-# plt.show()
-# exit()
-
-maxsol = sol[0][:, 0].max()
-minsol = sol[0][:, 0].min()
-lastkey = tuple(x.keys())[-1]
-minx = x[0][:].min()
-maxx = x[lastkey][:].max()
-for i in range(0, nt):
-    for key, value in x.items():
-        plt.plot(value, sol[key][:, i], "blue")
-        plt.axvline(x=x[key][0], color="k", linestyle="--")
-        plt.axvline(x=x[key][-1], color="k", linestyle="--")
-
-    plt.ylim(minsol, maxsol)
-    plt.xlim(minx, maxx)
-    plt.title(f"t={t[i]:.2f}")
-
-    plt.tight_layout()
-    plt.savefig(f"./results/{i}.png")
-    plt.clf()
-
-
-os.chdir("./results")
-print("Converting to gif...")
-os.system(f"convert -delay 0.5 -loop 0 {{0..{nt-1}}}.png wave.gif")
-os.system("mv wave.gif ..")
+gif = False
+if gif:
+    os.chdir("./results")
+    print("Converting to gif...")
+    os.system(
+        f"convert -delay 0.5 -loop 0 {{0..{nt-1}}}.png wave.gif"
+    )
+    os.system("mv wave.gif ../wave_absorbing.gif")
