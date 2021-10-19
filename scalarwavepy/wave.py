@@ -47,11 +47,17 @@ class ScalarWave:
         xi = self.initfunc.expr_dx(self.x, 0)
         return np.array([u, pi, xi])
 
+    # def prepare_gaussian_pulse(x, center=0.5, amplitude=1, sigma=1):
+    #     dx = x[2]-x[1]
+    #     u = analytic_sol(x, center, amplitude, sigma)
+    #     pi = - analytic_derivative_solx(x, center, amplitude, sigma)
+    #     xi = utils.spatial_derivative(u, dx)
+    #     return np.array([u, pi, xi])
+
     def evolve(self):
         rhs_func = ode.rhs(self.dx)
         for i in range(0, self.nt - 1):
             self.state_vector[:, :, i + 1] = utils.rk4(
                 rhs_func, self.state_vector[:, :, i], self.dt
             )
-
         return self.state_vector

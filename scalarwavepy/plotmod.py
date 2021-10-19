@@ -150,6 +150,7 @@ def plot_time_evolution(w, asol, gif=False):
         plt.tight_layout()
         plt.savefig(f"./results/{i}.png")
         plt.clf()
+        plt.close()
 
     if gif:
         os.chdir("./results")

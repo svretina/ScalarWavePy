@@ -18,7 +18,7 @@ def RHS(s, dx):
     dtpi = xix[:]
     dtxi = pix[:]
 
-    # pi_t - xi_t = 0 # here put the analytic solution for "generation"
+    # pi_t - xi_t = 0 # here put the analytic solution for "generati on"
     # pi_t + xi_t = xi_x + pi_x
     dtpi[0] = 0.5 * (
         xix[0] + pix[0]

@@ -14,7 +14,6 @@ import math
 ampl = 8
 sigma = 1 / 100
 cntr = 0.8
-
 pulse = analytic.Gaussian(cntr, ampl, sigma)
 
 
@@ -24,7 +23,7 @@ def convergence(dx_0, tf, t_eval, n=5, plot_convergence=False):
     pis = []
     xis = []
     courant_factor = 0.4
-    factor = 2 * np.linspace(1, n, n)
+    factor = 2 * np.linspace(1, n, n, dtype=np.int)
     for i in factor:
         dxprime = dx / i
 
@@ -35,6 +34,7 @@ def convergence(dx_0, tf, t_eval, n=5, plot_convergence=False):
             courant_factor=courant_factor,
         )
         idx_eval = int(np.round(t_eval / w.dt, 1))
+
         state_vector = w.evolve()
         numpi = state_vector[1, 0::i, idx_eval]
         numxi = state_vector[2, 0::i, idx_eval]
@@ -87,6 +87,7 @@ def convergence_over_time(dx_0, tf, plot=False):
 
 dx = 1 / 100
 tf = 2
+piline, xiline = convergence(dx, tf, 1, 5, True)
 
 # pi_convs, xi_convs = convergence_over_time(dx, tf, True)
 # print("fit pi:", piline)
