@@ -13,29 +13,28 @@ class Gaussian:
         self.sigma = sigma
         self.cntr = center
         self.base_expr = A * sf.exp(-((x - (c + t)) ** 2) / s)
-        self.exprt = self.base_expr.diff(t)
-        self.exprx = self.base_expr.diff(x)
+        self.fx = self._expr()
+        self.dt = self._expr_dt()
+        self.dx = self._expr_dx()
 
-    def expr(self, xs, ts):
-        f = self.base_expr.subs(
+    def __call__(self, xs, ts):
+        return self.fx(xs, ts)
+
+    def _expr(self):
+        f = self.base_expr.subs({A: self.A, s: self.sigma, c: self.cntr})
+        ff = lambdify((x, t), f, ["scipy", "numpy"])
+        return ff
+
+    def _expr_dt(self):
+        f = self.base_expr.diff(t).subs(
             {A: self.A, s: self.sigma, c: self.cntr}
         )
         ff = lambdify((x, t), f, ["scipy", "numpy"])
-        fff = ff(xs, ts)
-        return fff
+        return ff
 
-    def expr_dt(self, xs, ts):
-        f = self.exprt.subs(
+    def _expr_dx(self):
+        f = self.base_expr.diff(x).subs(
             {A: self.A, s: self.sigma, c: self.cntr}
         )
         ff = lambdify((x, t), f, ["scipy", "numpy"])
-        fff = ff(xs, ts)
-        return fff
-
-    def expr_dx(self, xs, ts):
-        f = self.exprx.subs(
-            {A: self.A, s: self.sigma, c: self.cntr}
-        )
-        ff = lambdify((x, t), f, ["scipy", "numpy"])
-        fff = ff(xs, ts)
-        return fff
+        return ff

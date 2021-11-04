@@ -3,11 +3,11 @@
 import numpy as np
 
 
-def discretize(ui, uf, du):
-    n = uf / du + 1
-    ns = np.arange(0, n, 1)
-    uf = ui + ns * du
-    return uf
+def discretize(ui, uf, nu):
+    du = uf / nu
+    ns = np.arange(0, int(nu) + 1, 1)
+    u = ui + ns * du
+    return u
 
 
 def spatial_derivative(u, dx):
@@ -35,3 +35,19 @@ def integrate(dx, vec):
     # trapezoidal rule
     tmp = 0.5 * (vec[0] + vec[-1]) + np.sum(vec[1:-1], axis=0)
     return dx * tmp
+
+
+def n_from_dx(dx, xn=1):
+    n = int(round(xn / dx))
+    dx2 = xn / n
+
+    assert np.isclose(abs(dx - dx2), 0, 1e-14)
+    return n
+
+
+def dx_from_n(n, xn=1):
+    dx = round(xn / n)
+    n2 = xn / dx
+
+    assert np.isclose(abs(n - n2), 0, 1e-14)
+    return dx

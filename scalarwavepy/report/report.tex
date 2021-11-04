@@ -1,4 +1,4 @@
-\documentclass[reprint, aps, prd, nofootinbib, superscriptaddress, floatfix]{revtex4-2}  % chktex 8
+\documentclass[reprint, prd, nofootinbib, superscriptaddress, floatfix]{revtex4-2}  % chktex 8
 
 \usepackage{graphicx}% Include figure files
 \usepackage{dcolumn}% Align table columns on decimal point
@@ -43,7 +43,7 @@
 \date{\today}
 
 \begin{abstract}
-
+This is a report about solving the wave equation.
 \end{abstract}
 
 \maketitle
@@ -132,13 +132,13 @@ If the exact solution $\tilde{u}$ is known, then check the sequence
 for different values of $h$ and fit a linear functions of $\log h$ to approximate $p$.
 In order to study the convergence of our code we fit a linear function to the sequence of Eq. \ref{eq:conv-log} for $h=[h/2, h/4, h/6, h/8, h/10]$ at an instance of time. For example, for t=1 we get the following convergence as seen in Fig. \ref{fig:l2-convergence-t=1}
 \begin{figure*}[htbp]
-  \includegraphics[width=16cm]{./L2_convergence.png}
+  \includegraphics[width=16cm]{./figures/L2_convergence.png}
   \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence of $\pi$ and the right subfigure shows the convergence of $\xi$. We see here that the convergence is p=2.5.}
   \label{fig:l2-convergence-t=1}
 \end{figure*}
 We repeat this calculation of the convergece $p$, for all time instances and get a non constant convergence over time as seen in Fig. \ref{fig:l2-convergence-t}.
 \begin{figure*}[htbp]
-  \includegraphics[width=16cm]{./L2_convergence_over_time.png}
+  \includegraphics[width=16cm]{./figures/L2_convergence_over_time.png}
   \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence over time of $\pi$ and the right subfigure shows the convergence over time of $\xi$. We see that it is not constant.}
   \label{fig:l2-convergence-t}
 \end{figure*}

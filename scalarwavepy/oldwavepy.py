@@ -54,21 +54,15 @@ class ScalarWave:
 
     def check_courant(self):
         if self.c >= 1:
-            raise ValueError(
-                f"Courant limit violation: c={self.c}"
-            )
+            raise ValueError(f"Courant limit violation: c={self.c}")
 
     def calculate_ghost_points(self, time_slice):
-        self.ghost[0, time_slice + 1] = self.u[0][
-            1, time_slice + 1
-        ]
+        self.ghost[0, time_slice + 1] = self.u[0][1, time_slice + 1]
         self.ghost[1, time_slice + 1] = self.u[self.lastkey][
             -2, time_slice + 1
         ]
 
-    def calculate_outer_boundaries(
-        self, time_slice, boundary_type="Neumann"
-    ):
+    def calculate_outer_boundaries(self, time_slice, boundary_type="Neumann"):
         if boundary_type == "Neumann":
             self.u[0][0, time_slice + 1] = self.lax_wendroff(
                 self.ghost[0, time_slice],
@@ -76,9 +70,7 @@ class ScalarWave:
                 self.u[0][1, time_slice],
                 self.c,
             )
-            self.u[self.lastkey][
-                -1, time_slice + 1
-            ] = self.lax_wendroff(
+            self.u[self.lastkey][-1, time_slice + 1] = self.lax_wendroff(
                 self.ghost[1, time_slice],
                 self.u[self.lastkey][-1, time_slice],
                 self.u[self.lastkey][-2, time_slice],
@@ -92,13 +84,9 @@ class ScalarWave:
     def initialize_exc_boundary(self):
         for key, value in self.mesh.x.items():
             if value[0] != self.mesh.x0:
-                self.u[key][0, 0] = self.exfunc(
-                    self.alpha, value[0], t=0
-                )
+                self.u[key][0, 0] = self.exfunc(self.alpha, value[0], t=0)
             if value[-1] != self.mesh.xn:
-                self.u[key][-1, 0] = self.exfunc(
-                    self.alpha, value[-1], t=0
-                )
+                self.u[key][-1, 0] = self.exfunc(self.alpha, value[-1], t=0)
 
     def calculate_exc_boundary(self, key, time_slice):
         if self.mesh.x[key][0] != self.mesh.x0:
@@ -117,9 +105,7 @@ class ScalarWave:
     @staticmethod
     def lax_wendroff(um1, u, up1, c):
         return (
-            u
-            - (c / 2) * (up1 - um1)
-            + ((c * c) / 2.0) * (up1 - 2 * u + um1)
+            u - (c / 2) * (up1 - um1) + ((c * c) / 2.0) * (up1 - 2 * u + um1)
         )
 
     def solve_interior(self, key, time_slice):
