@@ -23,7 +23,8 @@ class Mesh:
         x = dict()
         for i in range(self.ndom):
             x[i] = self.discretize(
-                self.boundaries[2 * i], self.boundaries[2 * i + 1]
+                self.boundaries[2 * i],
+                self.boundaries[2 * i + 1],
             )
         return x
 
