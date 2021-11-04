@@ -9,7 +9,11 @@ import copy
 
 def RHS(s, dx, ustar, vstar):
     u, pi, xi = s
+<<<<<<< HEAD
     alpha = 1.
+=======
+    alpha = 1.0
+>>>>>>> 6bf743d (major changes)
 
     pix = utils.spatial_derivative(pi, dx)
     xix = utils.spatial_derivative(xi, dx)
@@ -40,12 +44,21 @@ def RHS(s, dx, ustar, vstar):
 
     # Weak boundary imposition
     # Left boundary
+<<<<<<< HEAD
     dtpi[0] = xix[0] - (alpha/(2*dx)) * (pi[0]-xi[0]-ustar)
     dtxi[0] = pix[0] + (alpha/(2*dx)) * (pi[0]-xi[0]-ustar)
 
     # Right boundary
     dtpi[-1] = xix[-1] - (alpha/(2*dx)) * (pi[-1]+xi[-1] - vstar)
     dtxi[-1] = pix[-1] - (alpha/(2*dx)) * (pi[-1]+xi[-1] - vstar)
+=======
+    dtpi[0] = xix[0] - (alpha / (2 * dx)) * (pi[0] - xi[0] - ustar)
+    dtxi[0] = pix[0] + (alpha / (2 * dx)) * (pi[0] - xi[0] - ustar)
+
+    # Right boundary
+    dtpi[-1] = xix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
+    dtxi[-1] = pix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
+>>>>>>> 6bf743d (major changes)
 
     # # pi_t - xi_t = 0 # here put the analytic solution for "generati on"
     # # pi_t + xi_t = xi_x + pi_x
@@ -72,6 +85,10 @@ def RHS(s, dx, ustar, vstar):
 # def rhs(dx):
 #     return lambda s: RHS(s, dx)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6bf743d (major changes)
 def rhs(dx, ustar, vstar):
     return lambda s: RHS(s, dx, ustar, vstar)
 
@@ -86,6 +103,13 @@ def calculate_diagnostics(dx, state_vector):
     else:
         raise VallueError("Energy is not monotonically descreasing")
 
+<<<<<<< HEAD
 def check_monotonicity(vector):
     dv = np.diff(vector)
     return np.all(dv<=0)
+=======
+
+def check_monotonicity(vector):
+    dv = np.diff(vector)
+    return np.all(dv <= 0)
+>>>>>>> 6bf743d (major changes)

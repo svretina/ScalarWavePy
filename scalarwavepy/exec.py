@@ -9,7 +9,6 @@ from scalarwavepy import convergence as c
 from scalarwavepy import plotmod as pltm
 
 
-
 dx = 1 / 10
 nx = utils.n_from_dx(dx)
 tf = 50 * 0.4 * dx
@@ -17,11 +16,10 @@ teval = 23 * 0.4 * dx
 piline, xiline = c.convergence(dx, tf, teval, 5, True, True, True)
 # pi_convs, xi_convs = c.convergence_over_time(dx, tf, True, True)
 
-
 w = wave.ScalarWave(
     c.pulse,
     nx=nx,
-    t_final= tf,
+    t_final=tf,
     courant_factor=0.4,
 )
 w.evolve()

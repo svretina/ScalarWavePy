@@ -4,7 +4,7 @@ import numpy as np
 
 
 def discretize(ui, uf, nu):
-    du = uf/nu
+    du = uf / nu
     ns = np.arange(0, int(nu) + 1, 1)
     u = ui + ns * du
     return u
@@ -38,6 +38,7 @@ def integrate(dx, vec):
 
 
 def n_from_dx(dx, xn=1):
+<<<<<<< HEAD
     n = int(round(xn/dx))
     dx2 = xn/n
 
@@ -49,4 +50,18 @@ def dx_from_n(n, xn=1):
     n2 = xn/dx
 
     assert np.isclose(abs(n-n2), 0, 1e-14)
+=======
+    n = int(round(xn / dx))
+    dx2 = xn / n
+
+    assert np.isclose(abs(dx - dx2), 0, 1e-14)
+    return n
+
+
+def dx_from_n(n, xn=1):
+    dx = round(xn / n)
+    n2 = xn / dx
+
+    assert np.isclose(abs(n - n2), 0, 1e-14)
+>>>>>>> 6bf743d (major changes)
     return dx

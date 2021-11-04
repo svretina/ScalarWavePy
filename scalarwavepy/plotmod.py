@@ -21,9 +21,15 @@ plt.rcParams.update(params)
 dirname = os.path.dirname(__file__)
 figpath = f"{dirname}/figures"
 resultspath = f"{dirname}/results"
+<<<<<<< HEAD
 def plot_convergence(
     dxs, pis, xis, line1, line2, time, savefig=False
 ):
+=======
+
+
+def plot_convergence(dxs, pis, xis, line1, line2, time, savefig=False):
+>>>>>>> 6bf743d (major changes)
     mpi, bpi = line1
     mxi, bxi = line2
 
@@ -131,12 +137,19 @@ def plot_convergence_over_time(
 def plot_time_evolution(w, asol, gif=False):
     maxpi = max(abs(w.state_vector[1, :, 0]))
     maxxi = max(abs(w.state_vector[2, :, 0]))
+<<<<<<< HEAD
     for i in range(0, w.nt+1):
         asolpi = asol.dt(w.x, w.t[i])
         asolxi = asol.dx(w.x, w.t[i])
         fig, [ax1, ax2] = plt.subplots(
             nrows=1, ncols=2, figsize=(20, 10)
         )
+=======
+    for i in range(0, w.nt + 1):
+        asolpi = asol.dt(w.x, w.t[i])
+        asolxi = asol.dx(w.x, w.t[i])
+        fig, [ax1, ax2] = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+>>>>>>> 6bf743d (major changes)
         ax1.plot(w.x, asolpi, "--")
         ax1.plot(w.x, w.state_vector[1, :, i])
         ax1.set_ylim(-1.1 * maxpi, 1.1 * maxpi)
@@ -162,9 +175,13 @@ def plot_time_evolution(w, asol, gif=False):
     if gif:
         os.chdir("./results")
         print("Converting to gif...")
+<<<<<<< HEAD
         os.system(
             f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif"
         )
+=======
+        os.system(f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif")
+>>>>>>> 6bf743d (major changes)
         os.system("mv wave.gif ../wave_absorbing.gif")
 
 
@@ -184,11 +201,31 @@ def plot_resolutions(dx_0, result, pulse, savefig=False):
     for subresult in result.items():
         # i = subresult['factor']
         subresult = subresult[1]
+<<<<<<< HEAD
         errorpi = (subresult['pi']-subresult['api'])/subresult['dx']**2
         errorxi = (subresult['xi']-subresult['axi'])/subresult['dx']**2
 
         ax[0].plot(subresult['x'], errorpi, "-o", lw=1, label=f"dx={subresult['dx']:.4f}")
         ax[1].plot(subresult['x'], errorxi, "-o", lw=1, label=f"dx={subresult['dx']:.4f}")
+=======
+        errorpi = (subresult["pi"] - subresult["api"]) / subresult["dx"] ** 2
+        errorxi = (subresult["xi"] - subresult["axi"]) / subresult["dx"] ** 2
+
+        ax[0].plot(
+            subresult["x"],
+            errorpi,
+            "-o",
+            lw=1,
+            label=f"dx={subresult['dx']:.4f}",
+        )
+        ax[1].plot(
+            subresult["x"],
+            errorxi,
+            "-o",
+            lw=1,
+            label=f"dx={subresult['dx']:.4f}",
+        )
+>>>>>>> 6bf743d (major changes)
 
     ax[0].set_xlabel(r"$x$")
     ax[1].set_xlabel(r"$x$")
