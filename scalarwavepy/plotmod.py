@@ -21,9 +21,9 @@ plt.rcParams.update(params)
 dirname = os.path.dirname(__file__)
 figpath = f"{dirname}/figures"
 resultspath = f"{dirname}/results"
-def plot_convergence(
-    dxs, pis, xis, line1, line2, time, savefig=False
-):
+
+
+def plot_convergence(dxs, pis, xis, line1, line2, time, savefig=False):
     mpi, bpi = line1
     mxi, bxi = line2
 
@@ -160,9 +160,7 @@ def plot_time_evolution(w, asol, gif=False):
     if gif:
         os.chdir("./results")
         print("Converting to gif...")
-        os.system(
-            f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif"
-        )
+        os.system(f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif")
         os.system(f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif")
         os.system("mv wave.gif ../wave_absorbing.gif")
 

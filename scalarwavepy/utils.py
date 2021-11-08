@@ -38,9 +38,9 @@ def integrate(vec, dx):
     elif vec.ndim == 2:
         row, col = vec.shape
         if row < col:
-            tmp = 0.5 * (vec[:,0] + vec[:,-1]) + np.sum(vec[:,1:-1], axis=1)
+            tmp = 0.5 * (vec[:, 0] + vec[:, -1]) + np.sum(vec[:, 1:-1], axis=1)
         else:
-            tmp = 0.5 * (vec[0,:] + vec[-1,:]) + np.sum(vec[1:-1,:], axis=0)
+            tmp = 0.5 * (vec[0, :] + vec[-1, :]) + np.sum(vec[1:-1, :], axis=0)
     return dx * tmp
 
 
