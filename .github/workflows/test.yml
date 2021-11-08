@@ -42,7 +42,7 @@ jobs:
         run: poetry run black . --check
 
       - name: Tests and produce coverage
-        continue-on-error: true
+        continue-on-error: false
         run: |
           poetry run pytest --cov=./ --cov-report=xml
       - name: Upload coverage to Codecov
