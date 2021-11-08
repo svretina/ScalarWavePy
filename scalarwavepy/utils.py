@@ -27,41 +27,32 @@ def rk4(func, s, h):
     return s4
 
 
-def L2_norm(dx, vec):
-    return np.sqrt(integrate(dx, vec * vec))
+def L2_norm(vec, dx):
+    return np.sqrt(integrate(vec * vec, dx))
 
 
-def integrate(dx, vec):
+def integrate(vec, dx):
     # trapezoidal rule
-    tmp = 0.5 * (vec[0] + vec[-1]) + np.sum(vec[1:-1], axis=0)
+    if vec.ndim == 1:
+        tmp = 0.5 * (vec[0] + vec[-1]) + np.sum(vec[1:-1], axis=0)
+    elif vec.ndim == 2:
+        row, col = vec.shape
+        if row < col:
+            tmp = 0.5 * (vec[:,0] + vec[:,-1]) + np.sum(vec[:,1:-1], axis=1)
+        else:
+            tmp = 0.5 * (vec[0,:] + vec[-1,:]) + np.sum(vec[1:-1,:], axis=0)
     return dx * tmp
 
 
 def n_from_dx(dx, xn=1):
-<<<<<<< HEAD
-    n = int(round(xn/dx))
-    dx2 = xn/n
-
-    assert np.isclose(abs(dx-dx2), 0, 1e-14)
-    return n
-
-def dx_from_n(n, xn=1):
-    dx = round(xn/n)
-    n2 = xn/dx
-
-    assert np.isclose(abs(n-n2), 0, 1e-14)
-=======
     n = int(round(xn / dx))
     dx2 = xn / n
-
-    assert np.isclose(abs(dx - dx2), 0, 1e-14)
+    # assert np.isclose(abs(dx - dx2), 0, 1e-14)
     return n
 
 
 def dx_from_n(n, xn=1):
-    dx = round(xn / n)
+    dx = xn / n
     n2 = xn / dx
-
-    assert np.isclose(abs(n - n2), 0, 1e-14)
->>>>>>> 6bf743d (major changes)
+    # assert np.isclose(abs(n+1 - n2), 0, 1e-14)
     return dx

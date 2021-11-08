@@ -18,11 +18,6 @@ cntr = 0.4
 pulse = analytic.Gaussian(cntr, ampl, sigma)
 
 
-<<<<<<< HEAD
-
-def convergence(dx_0, tf, t_eval, n=5, plot_convergence=False,
-                plot_resolutions=False, savefigs=False):
-=======
 def convergence(
     dx_0,
     tf,
@@ -32,7 +27,6 @@ def convergence(
     plot_resolutions=False,
     savefigs=False,
 ):
->>>>>>> 6bf743d (major changes)
     pold = np.nan
     dxs = []
     pis = []
@@ -44,21 +38,13 @@ def convergence(
         Result[0] = t_eval
         Result[1] = wave.ScalarWave(
             pulse,
-<<<<<<< HEAD
-            nx=int(round(1/dx_0)),
-=======
             nx=int(round(1 / dx_0)),
->>>>>>> 6bf743d (major changes)
             t_final=tf,
             courant_factor=courant_factor,
         )
     for i in factor:
         subresult = {}
-<<<<<<< HEAD
-        dxprime = dx_0/i
-=======
         dxprime = dx_0 / i
->>>>>>> 6bf743d (major changes)
         nxprime = utils.n_from_dx(dxprime)
 
         w = wave.ScalarWave(
@@ -76,24 +62,13 @@ def convergence(
         analyticpi = pulse.dt(w.x, w.t[idx_eval])
         analyticxi = pulse.dx(w.x, w.t[idx_eval])
 
-        diffpi = utils.L2_norm(dxprime, numpi - analyticpi)
-        diffxi = utils.L2_norm(dxprime, numxi - analyticxi)
+        diffpi = utils.L2_norm(numpi - analyticpi, dxprime)
+        diffxi = utils.L2_norm(numxi - analyticxi, dxprime)
 
         dxs.append(dxprime)
         pis.append(diffpi)
         xis.append(diffxi)
         if plot_resolutions:
-<<<<<<< HEAD
-            subresult['x'] = w.x
-            subresult['dx'] = dxprime
-            subresult['factor'] = i
-            subresult['errorpi2'] = diffpi
-            subresult['errorxi2'] = diffxi
-            subresult['api'] = analyticpi
-            subresult['axi'] = analyticxi
-            subresult['pi'] = numpi
-            subresult['xi'] = numxi
-=======
             subresult["x"] = w.x
             subresult["dx"] = dxprime
             subresult["factor"] = i
@@ -103,20 +78,13 @@ def convergence(
             subresult["axi"] = analyticxi
             subresult["pi"] = numpi
             subresult["xi"] = numxi
->>>>>>> 6bf743d (major changes)
             Result[i] = subresult
 
     pi_line = np.polyfit(np.log(dxs), np.log(pis), 1)
     xi_line = np.polyfit(np.log(dxs), np.log(xis), 1)
 
     if plot_resolutions:
-<<<<<<< HEAD
-        pltm.plot_resolutions(
-            dx_0, Result, pulse, savefigs
-        )
-=======
         pltm.plot_resolutions(dx_0, Result, pulse, savefigs)
->>>>>>> 6bf743d (major changes)
     if plot_convergence:
         pltm.plot_convergence(
             dxs, pis, xis, pi_line, xi_line, w.t[idx_eval], savefigs
@@ -130,11 +98,7 @@ def convergence_over_time(dx_0, tf, plot=False, savefig=False):
     dt = 0.4 * dx_0
     nt = utils.n_from_dx(dt, tf)
     time = utils.discretize(0, tf, nt)
-<<<<<<< HEAD
-    for i in range(1, nt+1):
-=======
     for i in range(1, nt + 1):
->>>>>>> 6bf743d (major changes)
         print(f"time[{i}] = {time[i]}")
         piline, xiline = convergence(dx_0, tf, time[i])
         pi_convergence.append(piline[0])

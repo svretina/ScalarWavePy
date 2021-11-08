@@ -15,11 +15,7 @@ class ScalarWave:
         self,
         initfunc,
         domain_x=[0, 1],
-<<<<<<< HEAD
-        nx = 100,
-=======
         nx=100,
->>>>>>> 6bf743d (major changes)
         t_final=2,
         courant_factor=0.4,
     ):
@@ -30,11 +26,7 @@ class ScalarWave:
         self.nx = nx
         self.x0 = domain_x[0]
         self.xn = domain_x[-1]
-<<<<<<< HEAD
-        self.dx = self.xn/self.nx
-=======
         self.dx = self.xn / self.nx
->>>>>>> 6bf743d (major changes)
         self.dt = set_dt_from_courant(self.c, self.dx)
         self.nt = utils.n_from_dx(self.dt, self.tf)
 
@@ -43,11 +35,7 @@ class ScalarWave:
         self.x = utils.discretize(self.x0, self.xn, self.nx)
         self.t = utils.discretize(0, self.tf, self.nt)
 
-<<<<<<< HEAD
-        self.state_vector = np.zeros((3, self.nx+1, self.nt+1))
-=======
         self.state_vector = np.zeros((3, self.nx + 1, self.nt + 1))
->>>>>>> 6bf743d (major changes)
         self.state_vector[:, :, 0] = self.initialize_solution()
 
         # tmp = utils.integrate(self.dx, self.state_vector[0,:,0])
@@ -66,11 +54,7 @@ class ScalarWave:
 
     def evolve(self):
         for i in range(0, self.nt):
-<<<<<<< HEAD
-            ti = i*self.dt
-=======
             ti = i * self.dt
->>>>>>> 6bf743d (major changes)
             # pistar0 = self.initfunc.dt(self.x0, ti)
             # pistarN = self.initfunc.dt(self.xn, ti)
             # xistar0 = self.initfunc.dx(self.x0, ti)
