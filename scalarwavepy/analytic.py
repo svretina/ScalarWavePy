@@ -21,13 +21,7 @@ class Gaussian:
         return self.fx(xs, ts)
 
     def _expr(self):
-<<<<<<< HEAD
-        f = self.base_expr.subs(
-            {A: self.A, s: self.sigma, c: self.cntr}
-        )
-=======
         f = self.base_expr.subs({A: self.A, s: self.sigma, c: self.cntr})
->>>>>>> 6bf743d (major changes)
         ff = lambdify((x, t), f, ["scipy", "numpy"])
         return ff
 

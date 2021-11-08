@@ -5,6 +5,7 @@ from scalarwavepy import ode
 from scalarwavepy import wave
 from scalarwavepy import utils
 from scalarwavepy import analytic
+from scalarwavepy import convergence as c
 from scalarwavepy import plotmod as pltm
 from scalarwavepy import convergence as c
 

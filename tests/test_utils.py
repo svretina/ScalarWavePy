@@ -21,15 +21,13 @@ def test_spatial_derivative_linear(slope):
     assert np.all(utils.spatial_derivative(y, x[2]-x[1]) == slope)
 
 
-@pytest.mark.parametrize('deg', [2])
+@pytest.mark.parametrize('deg', [(3), (-2), (-1), (5), (100), (0)])
 def test_spatial_derivative_quad(deg):
     x = np.linspace(1, 10, 10)
     y = x ** deg
     interior = x[1:-1]
     answer_interior = deg * interior ** (deg-1)
     tmp = utils.spatial_derivative(y, x[2]-x[1])[1:-1]
-    print(tmp)
-    print(answer_interior)
     assert np.all(utils.spatial_derivative(y, x[2]-x[1])[1:-1] == answer_interior)
 
 
