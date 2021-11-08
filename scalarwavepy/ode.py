@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scalarwavepy import utils
-import os
-import copy
 
 
 def RHS(s, dx, ustar, vstar):

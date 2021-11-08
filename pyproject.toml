@@ -7,9 +7,13 @@ authors = ["Stamatis Vretinaris <stamatis.vretinaris@aei.mpg.de>"]
 [tool.poetry.dependencies]
 python = ">=3.7, <3.11"
 numpy = "^1.21.3"
+sympy = "^1.9"
+matplotlib = "^3.4.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+black = "^21.10b0"
+pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
