@@ -19,9 +19,9 @@ def test_calculate_diagnostics(s, dx):
     assert type(enrgy_dnsty) == np.ndarray
 
 
-def test_rhs():
-    f = ode.rhs(0.1, 0, 0, 1)
-    assert type(f) == 'function'
+# def test_rhs():
+#     f = ode.rhs(0.1, 0, 0, 1)
+#     assert type(f) == 'function'
 
 
 @pytest.mark.parametrize(

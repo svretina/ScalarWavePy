@@ -10,7 +10,7 @@ def f(s):
 @pytest.mark.parametrize(
     "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (1, 100, 100)]
 )
-def test_discretize1(ui, uf, nu):
+def test_discretize_length(ui, uf, nu):
     arr = utils.discretize(ui, uf, nu)
     assert len(arr) == nu + 1
 
@@ -18,7 +18,7 @@ def test_discretize1(ui, uf, nu):
 @pytest.mark.parametrize(
     "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (1, 100, 100)]
 )
-def test_discretize2(ui, uf, nu):
+def test_discretize_type(ui, uf, nu):
     arr = utils.discretize(ui, uf, nu)
     assert type(arr) == np.ndarray
 
@@ -26,8 +26,9 @@ def test_discretize2(ui, uf, nu):
 @pytest.mark.parametrize(
     "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (0, 100, 100)]
 )
-def test_discretize3(ui, uf, nu):
+def test_discretize(ui, uf, nu):
     arr = utils.discretize(ui, uf, nu)
+    print(arr)
     assert arr[0] == ui and arr[-1] == uf
 
 
@@ -158,14 +159,14 @@ def test_integrate_power2(power):
 )
 def test_n_from_dx(xi, xn, dx):
     ns = utils.n_from_dx(xi, xn, dx)
-    dx2 = utils.spacing(xi, xn, ns)
+    dx2 = utils.spacing(xi, xn, ns-1)
     assert np.isclose(abs(dx - dx2), 0, 1e-16)
 
 
 @pytest.mark.parametrize("xi, xn, n", [(1, 10, 10), (0, 10, 11)])
 def test_spacing(xi, xn, n):
     dx = utils.spacing(xi, xn, n)
-    n2 = (xn - xi) / dx + 1
+    n2 = (xn - xi) / dx
     assert np.isclose(abs(n - n2), 0, 1e-16)
 
 

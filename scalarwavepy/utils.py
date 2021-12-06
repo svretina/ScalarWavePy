@@ -4,8 +4,8 @@ import numpy as np
 
 
 def discretize(ui, uf, nu):
-    du = spacing(ui, uf, nu + 1)
-    ns = np.arange(0, int(nu) + 1, 1)
+    du = spacing(ui, uf, nu)
+    ns = np.arange(0, nu + 1, 1)
     u = ui + ns * du
     return u
 

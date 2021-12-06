@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import scipy
 from sympy import lambdify
 import sympy.functions as sf
 from sympy.abc import x, t, A, s, c
