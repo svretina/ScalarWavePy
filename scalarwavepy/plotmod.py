@@ -129,8 +129,10 @@ def plot_convergence_over_time(
 
 
 def plot_time_evolution(w, asol, gif=False):
-    maxpi = max(abs(w.state_vector[1, :, 0]))
-    maxxi = max(abs(w.state_vector[2, :, 0]))
+    # maxpi = max(abs(w.state_vector[1, :, 0]))
+    # maxxi = max(abs(w.state_vector[2, :, 0]))
+    maxpi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.sigma)
+    maxxi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.sigma)
     for i in range(0, w.nt + 1):
         asolpi = asol.dt(w.x, w.t[i])
         asolxi = asol.dx(w.x, w.t[i])
@@ -222,7 +224,7 @@ def plot_resolutions(dx_0, result, pulse, savefig=False):
 def plot_energy_density(t, energy_density, savefig=False):
     plt.plot(t, energy_density)
     plt.xlabel(r"$\rm time$")
-    plt.title("Energy Density")
+    plt.title(r"$\rm Energy$ $\rm Density$")
     plt.tight_layout()
 
     if savefig:

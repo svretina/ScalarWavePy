@@ -1,10 +1,69 @@
 import pytest
-from scalarwavepy import utils
 import numpy as np
+from scalarwavepy import utils
 
 
-def test_discretize():
-    pass
+def f(s):
+    return s * s
+
+
+@pytest.mark.parametrize(
+    "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (1, 100, 100)]
+)
+def test_discretize1(ui, uf, nu):
+    arr = utils.discretize(ui, uf, nu)
+    assert len(arr) == nu + 1
+
+
+@pytest.mark.parametrize(
+    "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (1, 100, 100)]
+)
+def test_discretize2(ui, uf, nu):
+    arr = utils.discretize(ui, uf, nu)
+    assert type(arr) == np.ndarray
+
+
+@pytest.mark.parametrize(
+    "ui, uf, nu", [(0, 1, 10), (1, 10, 10), (0, 100, 100)]
+)
+def test_discretize3(ui, uf, nu):
+    arr = utils.discretize(ui, uf, nu)
+    assert arr[0] == ui and arr[-1] == uf
+
+
+@pytest.mark.parametrize(
+    "f, s, h",
+    [
+        (f, np.array([1, 1, 1]), 1),
+        (f, np.array([np.ones(10), np.ones(10), np.ones(10)]), 1),
+    ],
+)
+def test_rk4(f, s, h):
+    sprime = utils.rk4(f, s, h)
+    assert sprime.shape == s.shape
+
+
+@pytest.mark.parametrize(
+    "f, s, h",
+    [
+        (f, np.array([0, 0, 0]), 1),
+        (f, np.array([np.zeros(10), np.zeros(10), np.zeros(10)]), 1),
+    ],
+)
+def test_rk4_zeros(f, s, h):
+    sprime = utils.rk4(f, s, h)
+    assert np.sum(sprime) == 0
+
+
+@pytest.mark.parametrize("vec, dx", [(np.ones(11), 1)])
+def test_L2_norm(vec, dx):
+    assert type(vec) == np.ndarray
+
+
+@pytest.mark.parametrize("vec, dx", [(np.ones(11), 0.1)])
+def test_L2_norm(vec, dx):
+    norm = utils.L2_norm(vec, dx)
+    assert norm == 1
 
 
 def test_spatial_derivative_constant():
@@ -36,6 +95,7 @@ def test_spatial_derivative_quad(deg):
     # print(cdiff,'\n', answer_interior)
     # assert np.all(num_error < th_error)
     assert np.all(answer_interior == cdiff)
+
 
 @pytest.mark.parametrize("slope", [(1), (3), (5), (7), (100)])
 def test_integrate_linear1(slope):
@@ -93,16 +153,29 @@ def test_integrate_power2(power):
 
 
 @pytest.mark.parametrize(
-    "dx, xn", [(0.1, 1), (0.003, 1.2), (0.3, 1.2), (0.123, 1.23), (1 / 3, 1)]
+    "xi, xn, dx",
+    [(0, 1, 0.1), (0, 1.2, 0.003), (0.3, 1.2, 0.3), (0, 1, 1 / 3)],
 )
-def test_n_from_dx(dx, xn):
-    ns = utils.n_from_dx(dx, xn)
-    dx2 = xn / ns
-    assert np.isclose(abs(dx - dx2), 0, 1e-14)
+def test_n_from_dx(xi, xn, dx):
+    ns = utils.n_from_dx(xi, xn, dx)
+    dx2 = utils.spacing(xi, xn, ns)
+    assert np.isclose(abs(dx - dx2), 0, 1e-16)
 
 
-@pytest.mark.parametrize("n, xn", [(10, 10), (10, 1)])
-def test_dx_from_n(n, xn):
-    dx = utils.dx_from_n(n, xn)
-    n2 = xn / dx + 1
-    assert np.isclose(abs(n + 1 - n2), 0, 1e-14)
+@pytest.mark.parametrize("xi, xn, n", [(1, 10, 10), (0, 10, 11)])
+def test_spacing(xi, xn, n):
+    dx = utils.spacing(xi, xn, n)
+    n2 = (xn - xi) / dx + 1
+    assert np.isclose(abs(n - n2), 0, 1e-16)
+
+
+def test_check_monotonicity1():
+    x = np.arange(1, 10, 1)
+    answer = True
+    assert utils.check_monotonicity(x) == answer
+
+
+def test_check_monotonicity2():
+    x = [1, 2, 3, 4, 5, 4, 3, 4, 5, 6, 7, 8, 9]
+    answer = False
+    assert utils.check_monotonicity(x) == answer

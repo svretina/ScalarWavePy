@@ -7,16 +7,6 @@ from scalarwavepy import utils
 from scalarwavepy import analytic
 from scalarwavepy import plotmod as pltm
 
-import matplotlib.pyplot as plt
-import os
-import math
-
-
-ampl = 8
-sigma = 1 / 100
-cntr = 0.4
-pulse = analytic.Gaussian(cntr, ampl, sigma)
-
 
 def convergence(
     dx_0,
@@ -45,7 +35,7 @@ def convergence(
     for i in factor:
         subresult = {}
         dxprime = dx_0 / i
-        nxprime = utils.n_from_dx(dxprime)
+        nxprime = utils.n_from_dx(0, 1, dxprime)
 
         w = wave.ScalarWave(
             pulse,

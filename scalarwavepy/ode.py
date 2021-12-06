@@ -2,11 +2,10 @@
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from scalarwavepy import utils
 
 
-def RHS(s, dx, ustar, vstar):
+def RHS(s, dx, alpha, ustar, vstar):
     u, pi, xi = s
     alpha = 1.0
 
@@ -46,47 +45,20 @@ def RHS(s, dx, ustar, vstar):
     dtpi[-1] = xix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
     dtxi[-1] = pix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
 
-    # # pi_t - xi_t = 0 # here put the analytic solution for "generati on"
-    # # pi_t + xi_t = xi_x + pi_x
-    # # u_t = 0
-    # # v_t = v_x
-    # #
-    # dtpi[0] = 0.5 * (
-    #     xix[0] + pix[0]
-    # )  ## left boundary pi_t = 0.5 * ( xi_x + pi_x )
-    # dtpi[-1] = 0.5 * (
-    #     xix[-1] - pix[-1]
-    # )  ## right boundary  pi_t = 0.5 * ( xi_x - pi_x )
-
-    # dtxi[0] = 0.5 * (
-    #     xix[0] + pix[0]
-    # )  ## left boundary   xi_t = 0.5 * ( xi_x + pi_x )
-    # dtxi[-1] = 0.5 * (
-    #     -xix[-1] + pix[-1]
-    # )  ## right boundary xi_t = 0.5 * ( pi_x - xi_x )
-
     return np.array([dtu, dtpi, dtxi])
 
 
-# def rhs(dx):
-#     return lambda s: RHS(s, dx)
+def rhs(dx, ustar, vstar, alpha=1.0):
+    return lambda s: RHS(s, dx, alpha, ustar, vstar)
 
 
-def rhs(dx, ustar, vstar):
-    return lambda s: RHS(s, dx, ustar, vstar)
-
-
-def calculate_diagnostics(dx, state_vector):
+def calculate_diagnostics(state_vector, dx):
     ud, pid, xid = state_vector[:, :, :]
-    energy = utils.integrate(pid ** 2 + xid ** 2, dx)
+    energy = utils.integrate(pid ** 2 + xid ** 2, dx, over="rows")
     energy_density = (1 / ud.shape[0]) * energy
     energy_density = energy_density / energy_density[0]
-    if check_monotonicity(energy_density):
-        return energy_density
-    else:
-        raise VallueError("Energy is not monotonically descreasing")
-
-
-def check_monotonicity(vector):
-    dv = np.diff(vector)
-    return np.all(dv <= 0)
+    return energy_density
+    # if utils.check_monotonicity(energy_density):
+    #     return energy_density
+    # else:
+    #     raise VallueError("Energy is not monotonically descreasing")

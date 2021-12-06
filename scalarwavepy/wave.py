@@ -28,7 +28,7 @@ class ScalarWave:
         self.xn = domain_x[-1]
         self.dx = self.xn / self.nx
         self.dt = set_dt_from_courant(self.c, self.dx)
-        self.nt = utils.n_from_dx(self.dt, self.tf)
+        self.nt = utils.n_from_dx(0, self.tf, self.dt)
 
         self.check_courant()
         self.initfunc = initfunc
@@ -37,10 +37,6 @@ class ScalarWave:
 
         self.state_vector = np.zeros((3, self.nx + 1, self.nt + 1))
         self.state_vector[:, :, 0] = self.initialize_solution()
-
-        # tmp = utils.integrate(self.dx, self.state_vector[0,:,0])
-        # print(tmp)
-        # exit()
 
     def check_courant(self):
         if self.c >= 1:
@@ -53,17 +49,18 @@ class ScalarWave:
         return np.array([u, pi, xi])
 
     def evolve(self):
+        alpha = 1.0 / 2
         for i in range(0, self.nt):
             ti = i * self.dt
-            # pistar0 = self.initfunc.dt(self.x0, ti)
-            # pistarN = self.initfunc.dt(self.xn, ti)
-            # xistar0 = self.initfunc.dx(self.x0, ti)
-            # xistarN = self.initfunc.dx(self.xn, ti)
-            # ustar = pistar0 - xistar0
+            pistar0 = self.initfunc.dt(self.x0, ti)
+            pistarN = self.initfunc.dt(self.xn, ti)
+            xistar0 = self.initfunc.dx(self.x0, ti)
+            xistarN = self.initfunc.dx(self.xn, ti)
+            ustar = pistar0 - xistar0
             # vstar = pistarN + xistarN
-            ustar = 0
+            # ustar = 0
             vstar = 0
-            rhs_func = ode.rhs(self.dx, ustar, vstar)
+            rhs_func = ode.rhs(self.dx, ustar, vstar, alpha)
             self.state_vector[:, :, i + 1] = utils.rk4(
                 rhs_func, self.state_vector[:, :, i], self.dt
             )
