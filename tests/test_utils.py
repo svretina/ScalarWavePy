@@ -20,7 +20,7 @@ def test_discretize_length(ui, uf, nu):
 )
 def test_discretize_type(ui, uf, nu):
     arr = utils.discretize(ui, uf, nu)
-    assert type(arr) == np.ndarray
+    assert type(arr) is np.ndarray
 
 
 @pytest.mark.parametrize(
@@ -58,7 +58,7 @@ def test_rk4_zeros(f, s, h):
 
 @pytest.mark.parametrize("vec, dx", [(np.ones(11), 1)])
 def test_L2_norm(vec, dx):
-    assert type(vec) == np.ndarray
+    assert type(vec) is np.ndarray
 
 
 @pytest.mark.parametrize("vec, dx", [(np.ones(11), 0.1)])
@@ -105,7 +105,7 @@ def test_integrate_linear1(slope):
 
     answer = 0
     tmp = utils.integrate(y, x[2] - x[1])
-    assert np.all(utils.integrate(y, x[2] - x[1]) == answer)
+    assert np.all(tmp == answer)
 
 
 @pytest.mark.parametrize("slope", [(1), (3), (5), (7), (100)])

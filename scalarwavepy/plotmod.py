@@ -167,7 +167,7 @@ def plot_time_evolution(w, asol, gif=False):
         os.system("mv wave.gif ../wave_absorbing.gif")
 
 
-def plot_resolutions(dx_0, result, pulse, savefig=False):
+def plot_resolutions(result, pulse, savefig=False):
     w = result[1]
     t_eval = result[0]
     result.pop(0)

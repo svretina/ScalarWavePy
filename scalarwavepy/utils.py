@@ -50,12 +50,12 @@ def n_from_dx(xi, xn, dx):
 
 
 def spacing(xi, xn, n):
-    """ Calculates the dx for an interval, given the start/end
+    """Calculates the dx for an interval, given the start/end
     of the interval and the number of points. The number of points is
     automatically added +1. If n=100, the result will be for n=101.
 
     """
-    dx = (xn - xi) / n # (n+1 -1)
+    dx = (xn - xi) / n  # (n+1 -1)
     return dx
 
 
