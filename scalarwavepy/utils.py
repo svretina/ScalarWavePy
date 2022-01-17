@@ -17,13 +17,13 @@ def spatial_derivative(u, dx):
 
 def rk4(func, s, h):
     k0 = func(s)
-    s1 = s + h / 2 * k0
+    s1 = s + (h / 2) * k0
     k1 = func(s1)
-    s2 = s + h / 2 * k1
+    s2 = s + (h / 2) * k1
     k2 = func(s2)
     s3 = s + h * k2
     k3 = func(s3)
-    s4 = s + h / 6 * (k0 + 2 * k1 + 2 * k2 + k3)
+    s4 = s + (h / 6) * (k0 + 2 * k1 + 2 * k2 + k3)
     return s4
 
 
@@ -37,9 +37,13 @@ def integrate(vec, dx, over="rows"):
         tmp = 0.5 * (vec[0] + vec[-1]) + np.sum(vec[1:-1], axis=0)
     elif vec.ndim == 2:
         if over == "rows":
-            tmp = 0.5 * (vec[0, :] + vec[-1, :]) + np.sum(vec[1:-1, :], axis=0)
+            tmp = 0.5 * (vec[0, :] + vec[-1, :]) + np.sum(
+                vec[1:-1, :], axis=0
+            )
         else:
-            tmp = 0.5 * (vec[:, 0] + vec[:, -1]) + np.sum(vec[:, 1:-1], axis=1)
+            tmp = 0.5 * (vec[:, 0] + vec[:, -1]) + np.sum(
+                vec[:, 1:-1], axis=1
+            )
 
     return dx * tmp
 

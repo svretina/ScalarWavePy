@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+from scalarwavepy import globvars
 from scalarwavepy import wave
 from scalarwavepy import utils
 import matplotlib.pyplot as plt
@@ -23,7 +24,9 @@ figpath = f"{dirname}/figures"
 resultspath = f"{dirname}/results"
 
 
-def plot_convergence(dxs, pis, xis, line1, line2, time, savefig=False):
+def plot_convergence(
+    dxs, pis, xis, line1, line2, time, savefig=False
+):
     mpi, bpi = line1
     mxi, bxi = line2
 
@@ -128,15 +131,17 @@ def plot_convergence_over_time(
         plt.show()
 
 
-def plot_time_evolution(w, asol, gif=False):
+def plot_time_evolution(w, asol, step=1, gif=False):
     # maxpi = max(abs(w.state_vector[1, :, 0]))
     # maxxi = max(abs(w.state_vector[2, :, 0]))
-    maxpi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.sigma)
-    maxxi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.sigma)
-    for i in range(0, w.nt + 1):
+    maxpi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.s)
+    maxxi = asol.A * np.sqrt(2 / np.exp(1)) / np.sqrt(asol.s)
+    for i in range(0, w.nt + 1, step):
         asolpi = asol.dt(w.x, w.t[i])
         asolxi = asol.dx(w.x, w.t[i])
-        fig, [ax1, ax2] = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+        fig, [ax1, ax2] = plt.subplots(
+            nrows=1, ncols=2, figsize=(20, 10)
+        )
         ax1.plot(w.x, asolpi, "--")
         ax1.plot(w.x, w.state_vector[1, :, i])
         ax1.set_ylim(-1.1 * maxpi, 1.1 * maxpi)
@@ -162,9 +167,34 @@ def plot_time_evolution(w, asol, gif=False):
     if gif:
         os.chdir("./results")
         print("Converting to gif...")
-        os.system(f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif")
-        os.system(f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif")
+        os.system(
+            f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif"
+        )
+        os.system(
+            f"convert -delay 0.5 -loop 0 {{0..{w.nt-1}}}.png wave.gif"
+        )
         os.system("mv wave.gif ../wave_absorbing.gif")
+
+
+def plot_at_resolutions(dx_0, tf):
+    results = {}
+    for i in range(1, 5):
+        dx = dx_0 / i
+        nx = utils.n_from_dx(0, 1, dx)
+        dt = wave.set_dt_from_courant(globvars.CFL, dx)
+        w = wave.ScalarWave(
+            globvars.PULSE,
+            nx=nx,
+            t_final=tf,
+            courant_factor=globvars.CFL,
+        )
+        w.evolve()
+        results[i] = w
+    print("need to plot the same time instances")
+    exit()
+    for index, wav in results.items():
+        for t in range(len(w.t)):
+            plt.plot(wav)
 
 
 def plot_resolutions(result, pulse, savefig=False):
@@ -183,8 +213,12 @@ def plot_resolutions(result, pulse, savefig=False):
     for subresult in result.items():
         # i = subresult['factor']
         subresult = subresult[1]
-        errorpi = (subresult["pi"] - subresult["api"]) / subresult["dx"] ** 2
-        errorxi = (subresult["xi"] - subresult["axi"]) / subresult["dx"] ** 2
+        errorpi = (subresult["pi"] - subresult["api"]) / subresult[
+            "dx"
+        ] ** 2
+        errorxi = (subresult["xi"] - subresult["axi"]) / subresult[
+            "dx"
+        ] ** 2
 
         ax[0].plot(
             subresult["x"],

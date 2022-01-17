@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import scipy
+import numpy as np
 from sympy import lambdify
-import sympy.functions as sf
+from sympy import functions as sf
 from sympy.abc import x, t, A, s, c
-
-# from functools import lru_cache
 
 
 class Gaussian:
@@ -40,9 +38,3 @@ class Gaussian:
         )
         ff = lambdify((x, t), f, ["scipy", "numpy"])
         return ff
-
-
-ampl = 8
-sigma = 1 / 100
-cntr = 0.4
-pulse = Gaussian(cntr, ampl, sigma)

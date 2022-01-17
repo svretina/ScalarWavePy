@@ -2,11 +2,14 @@
 
 import os
 import numpy as np
+from scalarwavepy import grid
 from scalarwavepy import utils
 
 
 def RHS(s, dx, alpha, ustar, vstar):
-    u, pi, xi = s
+    # print("-RHS", s)
+    u, pi, xi = s.state_vector[:, :]
+
     alpha = 1.0
 
     pix = utils.spatial_derivative(pi, dx)
@@ -32,9 +35,12 @@ def RHS(s, dx, alpha, ustar, vstar):
     # then back to pi, xi
 
     # interior
-    dtu = pi[:]
-    dtpi = xix[:]
-    dtxi = pix[:]
+    # dtu = pi[:]
+    # dtpi = xix[:]
+    # dtxi = pix[:]
+    dtu = pi
+    dtpi = xix
+    dtxi = pix
 
     # Weak boundary imposition
     # Left boundary
@@ -42,10 +48,15 @@ def RHS(s, dx, alpha, ustar, vstar):
     dtxi[0] = pix[0] + (alpha / (2 * dx)) * (pi[0] - xi[0] - ustar)
 
     # Right boundary
-    dtpi[-1] = xix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
-    dtxi[-1] = pix[-1] - (alpha / (2 * dx)) * (pi[-1] + xi[-1] - vstar)
-
-    return np.array([dtu, dtpi, dtxi])
+    dtpi[-1] = xix[-1] - (alpha / (2 * dx)) * (
+        pi[-1] + xi[-1] - vstar
+    )
+    dtxi[-1] = pix[-1] - (alpha / (2 * dx)) * (
+        pi[-1] + xi[-1] - vstar
+    )
+    # it should return a StateVector object!!!
+    sv = type(s)(np.array([dtu, dtpi, dtxi]), s.func)
+    return sv
 
 
 def rhs(dx, ustar, vstar, alpha=1.0):
@@ -53,7 +64,7 @@ def rhs(dx, ustar, vstar, alpha=1.0):
 
 
 def calculate_diagnostics(state_vector, dx):
-    ud, pid, xid = state_vector[:, :, :]
+    _, pid, xid = state_vector[:, :, :]
     energy = utils.integrate(pid ** 2 + xid ** 2, dx, over="rows")
     energy_density = (1 / ud.shape[0]) * energy
     energy_density = energy_density / energy_density[0]
