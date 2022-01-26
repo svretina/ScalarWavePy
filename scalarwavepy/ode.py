@@ -8,13 +8,10 @@ from scalarwavepy import utils
 
 def RHS(s, dx, alpha, ustar, vstar):
     # print("-RHS", s)
-    u, pi, xi = s.state_vector[:, :]
-
+    u, pi, xi = s.state_vector
     alpha = 1.0
-
-    pix = utils.spatial_derivative(pi, dx)
-    xix = utils.spatial_derivative(xi, dx)
-
+    pix = pi.differentiated()
+    xix = xi.differentiated()
     # pi = xi
     # u = pi - xi
     # v = pi + xi
@@ -23,7 +20,7 @@ def RHS(s, dx, alpha, ustar, vstar):
     # xi_t = pi_x
 
     # u_t = pi_t - xi_t = xi_x - pi_x = -u_x
-    # v_t = pi_t + xi_T = xi_x + pi_x = v_x
+    # v_t = pi_t + xi_t = xi_x + pi_x = v_x
 
     # Left B:
     # u_t = -u_x - (a/dx) * (u-u*) [u* is value that I want to impose]
@@ -41,18 +38,23 @@ def RHS(s, dx, alpha, ustar, vstar):
     dtu = pi
     dtpi = xix
     dtxi = pix
-
+    dx = pi.grid.dx
     # Weak boundary imposition
     # Left boundary
-    dtpi[0] = xix[0] - (alpha / (2 * dx)) * (pi[0] - xi[0] - ustar)
-    dtxi[0] = pix[0] + (alpha / (2 * dx)) * (pi[0] - xi[0] - ustar)
+    ## why 2dx ??
+    dtpi.values[0] = xix.values[0] - (alpha / (2 * dx)) * (
+        pi.values[0] - xi.values[0] - ustar
+    )
+    dtxi.values[0] = pix.values[0] + (alpha / (2 * dx)) * (
+        pi.values[0] - xi.values[0] - ustar
+    )
 
     # Right boundary
-    dtpi[-1] = xix[-1] - (alpha / (2 * dx)) * (
-        pi[-1] + xi[-1] - vstar
+    dtpi.values[-1] = xix.values[-1] - (alpha / (2 * dx)) * (
+        pi.values[-1] + xi.values[-1] - vstar
     )
-    dtxi[-1] = pix[-1] - (alpha / (2 * dx)) * (
-        pi[-1] + xi[-1] - vstar
+    dtxi.values[-1] = pix.values[-1] - (alpha / (2 * dx)) * (
+        pi.values[-1] + xi.values[-1] - vstar
     )
     # it should return a StateVector object!!!
     sv = type(s)(np.array([dtu, dtpi, dtxi]), s.func)

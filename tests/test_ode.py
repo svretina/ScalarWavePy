@@ -16,7 +16,7 @@ def test_calculate_diagnostics(s, dx):
 )
 def test_calculate_diagnostics(s, dx):
     enrgy_dnsty = ode.calculate_diagnostics(s, dx)
-    assert type(enrgy_dnsty) == np.ndarray
+    assert type(enrgy_dnsty) is np.ndarray
 
 
 # def test_rhs():

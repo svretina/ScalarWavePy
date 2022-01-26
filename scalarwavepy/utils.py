@@ -10,9 +10,12 @@ def discretize(ui, uf, nu):
     return u
 
 
-def spatial_derivative(u, dx):
-    u = np.gradient(u, dx, edge_order=1)
-    return u
+def spatial_derivative(f, dx):
+    tmp = np.empty_like(f)
+    tmp[1:-1] = (f[2:] - f[:-2]) / (2 * dx)
+    tmp[0] = (f[1] - f[0]) / dx
+    tmp[-1] = (f[-1] - f[-2]) / dx
+    return tmp
 
 
 def rk4(func, s, h):
@@ -48,10 +51,17 @@ def integrate(vec, dx, over="rows"):
     return dx * tmp
 
 
-def n_from_dx(xi, xn, dx):
+def npoints_from_dx(xi, xn, dx):
     n = int(round((xn - xi) / dx) + 1)
     return n
 
+def ncells_from_dx(xi, xn, dx):
+    n = int(round((xn-xi) / dx))
+    return n
+
+def spacing_of_array(x):
+    dx = (x[-1]-x[0])/(len(x)-1)
+    return dx
 
 def spacing(xi, xn, n):
     """Calculates the dx for an interval, given the start/end

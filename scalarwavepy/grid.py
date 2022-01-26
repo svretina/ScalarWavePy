@@ -94,34 +94,55 @@ class GridFunction(BaseNumerical):
                 "values can be of type float or numpy.ndarray only."
             )
 
+    def differentiate(self):
+        f = self.values
+        tmp = np.empty_like(self.values)
+        tmp[1:-1] = (f[2:] - f[:-2]) / (2 * self.grid.spacing)
+        tmp[0] = (f[1] - f[0]) / self.grid.spacing
+        tmp[-1] = (f[-1] - f[-2]) / self.grid.spacing
+        self.values = tmp
+
+    def differentiated(self):
+        f = self.values
+        tmp = np.empty_like(self.values)
+        tmp[1:-1] = (f[2:] - f[:-2]) / (2 * self.grid.spacing)
+        tmp[0] = (f[1] - f[0]) / self.grid.spacing
+        tmp[-1] = (f[-1] - f[-2]) / self.grid.spacing
+        return type(self)(self.grid, tmp)
+
     def __len__(self):
         return len(self.grid)
 
     def __str__(self):
-        tmp = f"x: {self.grid.grid}\nf(x): {self.values}"
+        tmp = f"x:    {self.grid}\nf(x): {self.values}"
         return tmp
 
     # def __repr__(self):
     #     tmp = f"{self.values}"
     #     return tmp
 
-    def __getitem__(self, index):
-        return self.values[index]
+    # def __getitem__(self, index):
+    #     return self.values[index]
 
     def _apply_reduction(self, reduction, *args, **kwargs):
         return reduction(self.values, *args, **kwargs)
 
     def _apply_unary(self, function, *args, **kwargs):
-        return function(self.values, *args, **kwargs)
+        return type(self)(
+            self.grid, function(self.values, *args, **kwargs)
+        )
 
     def _apply_binary(self, other, function, *args, **kwargs):
         # If it is a number
         if isinstance(other, (int, float, complex)):
-            return function(self.values, other, *args, **kwargs)
+            return type(self)(
+                self.grid,
+                function(self.values, other, *args, **kwargs),
+            )
 
         if isinstance(other, type(self)):
             if not (
-                all(self.grid.shape == other.grid.shape)
+                self.grid.shape == other.grid.shape
                 and np.allclose(
                     self.grid.domain[0],
                     other.grid.domain[0],
@@ -134,6 +155,15 @@ class GridFunction(BaseNumerical):
                 raise ValueError(
                     "The objects do not have the same grid!"
                 )
+            return type(self)(
+                self.grid,
+                function(
+                    self.values,
+                    other.values,
+                    *args,
+                    **kwargs,
+                ),
+            )
         # If we are here, its because we cannot add the two objects
         raise TypeError("I don't know how to combine these objects")
 
@@ -144,19 +174,19 @@ class StateVector(BaseNumerical):
         self.func = func
 
     def initialize(self, grid):
-        assert isinstance(self.func, analytic.Gaussian)
         if not callable(self.func):
             u = GridFunction(grid, 0)
             pi = GridFunction(grid, 0)
             xi = GridFunction(grid, 0)
         else:
+            assert isinstance(self.func, analytic.Gaussian)
             u = GridFunction(grid, lambda s: self.func(s, 0))
             pi = GridFunction(grid, lambda s: self.func.dt(s, 0))
             xi = GridFunction(grid, lambda s: self.func.dx(s, 0))
         self.state_vector = np.array([u, pi, xi])
 
-    def __repr__(self):
-        return f"{self.state_vector}"
+    # def __repr__(self):
+    #     return f"{self.state_vector}"
 
     def _apply_reduction(self, reduction, *args, **kwargs):
         return reduction(self.state_vector, *args, **kwargs)

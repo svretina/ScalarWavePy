@@ -113,34 +113,73 @@ for the left boundary and
   \end{split}
 \end{equation}
 for the right boundary. We apply these boundary conditions by modifying the right hand side function in our evolution scheme. This is known as imposing boundary conditions \textit{strongly}.
-\section{Convergence}
-We will denote the analytical solution as $\tilde{u}$ and the numerical solution which depends on $h=dx$ as $u_h$. If the numerical method is of order $p$, then there exists a number $C$ such that
-\begin{equation}
-  \label{eq:conv-cond}
-  |u_h - \tilde{u}| \leq C h^p.
-\end{equation}
-Assuming that the error $|u_h - \tilde{u}|$ depends smoothly on $h$
-\begin{equation}
-  \label{eq:conv-cond2}
-  u_h - \tilde{u} = C h^p + \mathcal{O}(h^{p+1}).
-\end{equation}
-If the exact solution $\tilde{u}$ is known, then check the sequence
-\begin{equation}
-  \label{eq:conv-log}
-  \log|u_h-\tilde{u}| = \log|C|+p\log h + \mathcal{O}(h),
-\end{equation}
-for different values of $h$ and fit a linear functions of $\log h$ to approximate $p$.
-In order to study the convergence of our code we fit a linear function to the sequence of Eq. \ref{eq:conv-log} for $h=[h/2, h/4, h/6, h/8, h/10]$ at an instance of time. For example, for t=1 we get the following convergence as seen in Fig. \ref{fig:l2-convergence-t=1}
-\begin{figure*}[htbp]
-  \includegraphics[width=16cm]{./figures/L2_convergence.png}
-  \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence of $\pi$ and the right subfigure shows the convergence of $\xi$. We see here that the convergence is p=2.5.}
-  \label{fig:l2-convergence-t=1}
-\end{figure*}
-We repeat this calculation of the convergece $p$, for all time instances and get a non constant convergence over time as seen in Fig. \ref{fig:l2-convergence-t}.
-\begin{figure*}[htbp]
-  \includegraphics[width=16cm]{./figures/L2_convergence_over_time.png}
-  \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence over time of $\pi$ and the right subfigure shows the convergence over time of $\xi$. We see that it is not constant.}
-  \label{fig:l2-convergence-t}
-\end{figure*}
+
+Strong imposision of the boundary conditions leads to instabilities so we opt to weak imposition as:
+
+\begin{align}
+  u &= \pi - \xi,  \label{eq:characteristic_vars1} \\
+  v &= \pi + \xi,   \label{eq:characteristic_vars2}
+\end{align}
+taking now the time derivatives we get
+\begin{align}
+  \label{eq:left_boundary_1}
+  u_t &= \pi_t - \xi_t = \xi_x - \pi_x = -u_x, \\
+  v_t &= \pi_t + \xi_t = \xi_x + \pi_x = v_x.
+\end{align}
+
+On the Left Boundary $u$ is the \textit{incoming} variable and for the Right Boundary $v$ is the \textit{incoming} variable. We have to provide boundary conditions for the incoming variables only. For weak imposition the boundary condition for the Left Boundary we have
+\begin{align}
+  u_t &= -u_x - \frac{a}{dx} (u-u*),\\
+  v_t &= v_x.
+\end{align}
+
+For the Right Boundary we have
+\begin{align}
+  u_t &= -u_x,\\
+  v_t &= v_x - \frac{a}{dx} (v-v*).
+\end{align}
+Now using \eq{eq:characteristic_vars1} and \eq{eq:characteristic_vars2} to transform back to $\pi$ and $\xi$ we get for the Left Boundary
+
+
+\begin{align}
+  \pi_t &= \xi_x - \frac{a}{2dx} (\pi-\xi-u*),\\
+  \xi_t &= \pi_x + \frac{a}{2dx} (\pi-\xi-u*),
+\end{align}
+and for the Right Boundary
+\begin{align}
+  \pi_t &= \xi_x - \frac{a}{2dx} (\pi+\xi-v*),\\
+  \xi_t &= \pi_x - \frac{a}{2dx} (\pi+\xi-v*),
+\end{align}
+\SV{the 2 factor in dx stems from the transformation back. if I use the initial equations it doesnt appear.}
+
+% \section{Convergence}
+% We will denote the analytical solution as $\tilde{u}$ and the numerical solution which depends on $h=dx$ as $u_h$. If the numerical method is of order $p$, then there exists a number $C$ such that
+% \begin{equation}
+%   \label{eq:conv-cond}
+%   |u_h - \tilde{u}| \leq C h^p.
+% \end{equation}
+% Assuming that the error $|u_h - \tilde{u}|$ depends smoothly on $h$
+% \begin{equation}
+%   \label{eq:conv-cond2}
+%   u_h - \tilde{u} = C h^p + \mathcal{O}(h^{p+1}).
+% \end{equation}
+% If the exact solution $\tilde{u}$ is known, then check the sequence
+% \begin{equation}
+%   \label{eq:conv-log}
+%   \log|u_h-\tilde{u}| = \log|C|+p\log h + \mathcal{O}(h),
+% \end{equation}
+% for different values of $h$ and fit a linear functions of $\log h$ to approximate $p$.
+% In order to study the convergence of our code we fit a linear function to the sequence of Eq. \ref{eq:conv-log} for $h=[h/2, h/4, h/6, h/8, h/10]$ at an instance of time. For example, for t=1 we get the following convergence as seen in Fig. \ref{fig:l2-convergence-t=1}
+% \begin{figure*}[htbp]
+%   \includegraphics[width=16cm]{./figures/L2_convergence.png}
+%   \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence of $\pi$ and the right subfigure shows the convergence of $\xi$. We see here that the convergence is p=2.5.}
+%   \label{fig:l2-convergence-t=1}
+% \end{figure*}
+% We repeat this calculation of the convergece $p$, for all time instances and get a non constant convergence over time as seen in Fig. \ref{fig:l2-convergence-t}.
+% \begin{figure*}[htbp]
+%   \includegraphics[width=16cm]{./figures/L2_convergence_over_time.png}
+%   \caption{Convergence of $L_2$ norm for t=1. The left subfigure shows the convergence over time of $\pi$ and the right subfigure shows the convergence over time of $\xi$. We see that it is not constant.}
+%   \label{fig:l2-convergence-t}
+% \end{figure*}
 
 \end{document}
