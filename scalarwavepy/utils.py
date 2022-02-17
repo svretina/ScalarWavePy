@@ -55,13 +55,16 @@ def npoints_from_dx(xi, xn, dx):
     n = int(round((xn - xi) / dx) + 1)
     return n
 
+
 def ncells_from_dx(xi, xn, dx):
-    n = int(round((xn-xi) / dx))
+    n = int(round((xn - xi) / dx))
     return n
 
+
 def spacing_of_array(x):
-    dx = (x[-1]-x[0])/(len(x)-1)
+    dx = (x[-1] - x[0]) / (len(x) - 1)
     return dx
+
 
 def spacing(xi, xn, n):
     """Calculates the dx for an interval, given the start/end

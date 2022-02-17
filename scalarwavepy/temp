@@ -1,0 +1,9 @@
+def function1(x, y):
+    return list(map(function, x, y))
+def function2(x, y):
+    return type(self)(function1(x.coords, y.coords))
+
+def function3(x, y):
+    return list(map(function, x, y))
+def function4(x, y):
+return MultipleGrid(function3(self.ugrids, other.ugrids))

@@ -5,7 +5,7 @@ import numpy as np
 from scalarwavepy import wave
 from scalarwavepy import grid
 from scalarwavepy import utils
-from scalarwavepy import globvars
+from scalarwavepy import global_vars
 import matplotlib.pyplot as plt
 
 params = {
@@ -26,7 +26,13 @@ resultspath = f"{dirname}/results"
 
 
 def plot_convergence(
-    dxs, pis, xis, line1, line2, time, savefig=False
+    dxs,
+    pis,
+    xis,
+    line1,
+    line2,
+    time,
+    savefig=False,
 ):
     mpi, bpi = line1
     mxi, bxi = line2
@@ -90,7 +96,10 @@ def plot_convergence(
 
 
 def plot_convergence_over_time(
-    time, pi_convergence, xi_convergence, savefig=False
+    time,
+    pi_convergence,
+    xi_convergence,
+    savefig=False,
 ):
     fig, ax = plt.subplots(1, 2, figsize=(20, 10))
 
@@ -147,7 +156,8 @@ def plot_time_evolution(time, result, step=1, gif=False):
         )
 
         ax1.plot(
-            spatial_grid.coords, result[i].state_vector[1].values
+            spatial_grid.coords,
+            result[i].state_vector[1].values,
         )
         ax1.plot(spatial_grid.coords, asolpi, "--")
 
@@ -156,15 +166,22 @@ def plot_time_evolution(time, result, step=1, gif=False):
         ax1.set_title(r"$\pi:=\partial_t u$")
 
         ax2.plot(
-            spatial_grid.coords, result[i].state_vector[2].values
+            spatial_grid.coords,
+            result[i].state_vector[2].values,
         )
         ax2.plot(spatial_grid.coords, asolxi, "--")
         ax2.set_xlabel(r"$\rm x$")
         ax2.set_title(r"$\xi:=\partial_x u$")
         ax2.set_ylim(-1.1 * maxpi, 1.1 * maxpi)
 
-        ax1.set_xlim(spatial_grid.domain[0], spatial_grid.domain[1])
-        ax2.set_xlim(spatial_grid.domain[0], spatial_grid.domain[1])
+        ax1.set_xlim(
+            spatial_grid.domain[0],
+            spatial_grid.domain[1],
+        )
+        ax2.set_xlim(
+            spatial_grid.domain[0],
+            spatial_grid.domain[1],
+        )
 
         plt.suptitle(rf"$\rm t={time.coords[i]:.2f}$")
 
@@ -182,18 +199,17 @@ def plot_time_evolution(time, result, step=1, gif=False):
 
 
 def plot_at_resolutions(
-        initial_spacing,
-        eval_time=1,
-        depth=5,
-        savefig=False
+    initial_spacing,
+    eval_time=1,
+    depth=5,
+    savefig=False,
 ):
     results = {}
     spatial_domain = grid.SingleDomain([0, 1])
     time_domain = grid.SingleDomain([0, eval_time])
     ncells = utils.ncells_from_dx(0, 1, initial_spacing)
     spatial_grid = grid.SingleGrid(spatial_domain, ncells)
-    time_grid = grid.TimeGrid_from_cfl(spatial_grid,
-                                       time_domain)
+    time_grid = grid.TimeGrid_from_cfl(spatial_grid, time_domain)
     index = int(np.round(eval_time / time_grid.spacing))
     f = globvars.PULSE
     sv = grid.StateVector(func=f)
@@ -204,27 +220,30 @@ def plot_at_resolutions(
         ncells = utils.ncells_from_dx(0, 1, dx)
         spatial_grid = grid.SingleGrid(spatial_domain, ncells)
         sv.initialize(spatial_grid)
-        time_grid = grid.TimeGrid_from_cfl(spatial_grid,
-                                           time_domain)
+        time_grid = grid.TimeGrid_from_cfl(spatial_grid, time_domain)
         dt = time_grid.spacing
         index = int(np.round(eval_time / dt, 1))
         res = wave.evolve(sv, spatial_grid, time_grid)
         pi = res[index].state_vector[1]
         xi = res[index].state_vector[2]
-        ax[0].plot(pi.grid.coords, pi.values,'-o')
-        ax[1].plot(xi.grid.coords, xi.values,'-o')
+        ax[0].plot(pi.grid.coords, pi.values, "-o")
+        ax[1].plot(xi.grid.coords, xi.values, "-o")
 
     analytic_pi = f.dt(spatial_grid, time_grid.coords[index])
     analytic_xi = f.dx(spatial_grid, time_grid.coords[index])
 
-    ax[0].plot(pi.grid.coords, analytic_pi,'r--',lw=2)
-    ax[1].plot(xi.grid.coords, analytic_xi,'r--',lw=2)
+    ax[0].plot(pi.grid.coords, analytic_pi, "r--", lw=2)
+    ax[1].plot(xi.grid.coords, analytic_xi, "r--", lw=2)
     ax[0].set_title(r"$\pi:=\partial_t u$")
     ax[1].set_title(r"$\xi:=\partial_x u$")
-    ax[0].set_xlim(spatial_domain.domain[0],
-                   spatial_domain.domain[-1])
-    ax[1].set_xlim(spatial_domain.domain[0],
-                   spatial_domain.domain[-1])
+    ax[0].set_xlim(
+        spatial_domain.domain[0],
+        spatial_domain.domain[-1],
+    )
+    ax[1].set_xlim(
+        spatial_domain.domain[0],
+        spatial_domain.domain[-1],
+    )
     if savefig:
         savename = f"{figpath}/pixi_resolutions.png"
         plt.savefig(savename)

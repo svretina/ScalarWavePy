@@ -3,76 +3,11 @@
 import numpy as np
 from scalarwavepy import wave
 from scalarwavepy import utils
+from scalarwavepy import grids
 from scalarwavepy import analytic
-from scalarwavepy import globvars
+from scalarwavepy import global_vars
 from scalarwavepy.numerical import BaseNumerical
-
-
-class SingleDomain:
-    def __init__(self, physical_domain):
-        """Constructor of :py:class:`~.SingleDomain`.
-        :param physical_domain: a list of the physical domain
-        eg [0,1]
-        :type physical_domain: list or np.ndarray
-        """
-        if isinstance(physical_domain, list):
-            self.domain = np.array(physical_domain)
-        elif isinstance(physical_domain, np.ndarray):
-            self.domain = physical_domain
-        else:
-            raise TypeError(
-                f"Pass list or numpy ndarray.\
-                You passed {type(physical_domain)}"
-            )
-
-
-class SingleGrid(BaseNumerical):
-    def __init__(self, single_domain, ncells):
-        """Constructor of :py:class:`~.UniformGrid`.
-        A cell is defined as the space between two grid points
-        :param domain: Physical Domain of the grid
-        :type domain: Domain class
-        :param ncells: Number of cells for the grid.
-        :type ncells: int
-        """
-        if not isinstance(single_domain, SingleDomain):
-            raise TypeError(
-                "The domain should be of class SingleDomain."
-            )
-        assert isinstance(ncells, int)
-        self.domain = single_domain.domain
-        self.ncells = ncells
-        self.npoints = ncells + 1
-        self.coords = utils.discretize(
-            self.domain[0], self.domain[1], ncells
-        )
-        self.dx = utils.spacing(
-            self.domain[0], self.domain[1], ncells
-        )
-        self.spacing = self.dx
-
-    def __str__(self):
-        return str(self.coords)
-
-    def __len__(self):
-        return len(self.coords)
-
-    @property
-    def shape(self):
-        return self.coords.shape
-
-    def _apply_reduction(self, reduction, *args, **kwargs):
-        return reduction(self.coords, *args, **kwargs)
-
-    def _apply_unary(self, function, *args, **kwargs):
-        return function(self.coords, *args, **kwargs)
-
-    def _apply_binary(self, other, function, *args, **kwargs):
-        # If it is a number
-        if isinstance(other, (int, float, complex)):
-            return function(self.coords, other, *args, **kwargs)
-        # If we are here, its because we cannot add the two objects
-        raise TypeError("I don't know how to combine these objects")
+from scalarwavepy import domains
 
 
 class GridFunction(BaseNumerical):
@@ -80,15 +15,33 @@ class GridFunction(BaseNumerical):
         self.grid = grid
         if callable(values):
             # y = f(x)
-            self.values = values(grid)
+            if isinstance(grid, grids.MultipleGrid):
+
+                def func1(x):
+                    return list(map(values, x.coords))
+
+                def func2(function, x):
+                    return list(map(function, x.ugrids))
+
+                self.values = np.array(
+                    func2(func1, grid),
+                    dtype=object,
+                )
+            elif isinstance(grid, grids.SingleGrid):
+                self.values = values(grid.coords)
+            else:
+                raise TypeError(
+                    f"Grid cannot be of type {type(grid)}"
+                )
         elif isinstance(values, (float, int)):
             # y = const
-            self.values = np.repeat(values, len(grid))
-            assert grid.shape == self.values.shape
+            self.values = np.full(grid.shape, values)
         elif isinstance(values, np.ndarray):
             # direct assignment
-            self.values = values
-            assert grid.shape == values.shape
+            if grid.shape == values.shape:
+                self.values = values
+            else:
+                raise ValueError(f"Grid shape {grid.shape} and Values shape {values.shape} dont match.")
         else:
             raise TypeError(
                 "values can be of type float or numpy.ndarray only."
@@ -117,19 +70,13 @@ class GridFunction(BaseNumerical):
         tmp = f"x:    {self.grid}\nf(x): {self.values}"
         return tmp
 
-    # def __repr__(self):
-    #     tmp = f"{self.values}"
-    #     return tmp
-
-    # def __getitem__(self, index):
-    #     return self.values[index]
-
     def _apply_reduction(self, reduction, *args, **kwargs):
         return reduction(self.values, *args, **kwargs)
 
     def _apply_unary(self, function, *args, **kwargs):
         return type(self)(
-            self.grid, function(self.values, *args, **kwargs)
+            self.grid,
+            function(self.values, *args, **kwargs),
         )
 
     def _apply_binary(self, other, function, *args, **kwargs):
@@ -137,7 +84,12 @@ class GridFunction(BaseNumerical):
         if isinstance(other, (int, float, complex)):
             return type(self)(
                 self.grid,
-                function(self.values, other, *args, **kwargs),
+                function(
+                    self.values,
+                    other,
+                    *args,
+                    **kwargs,
+                ),
             )
 
         if isinstance(other, type(self)):
@@ -149,7 +101,9 @@ class GridFunction(BaseNumerical):
                     atol=1e-14,
                 )
                 and np.allclose(
-                    self.grid.dx, other.grid.dx, atol=1e-14
+                    self.grid.dx,
+                    other.grid.dx,
+                    atol=1e-14,
                 )
             ):
                 raise ValueError(
@@ -179,28 +133,36 @@ class StateVector(BaseNumerical):
             pi = GridFunction(grid, 0)
             xi = GridFunction(grid, 0)
         else:
-            assert isinstance(self.func, analytic.Gaussian)
             u = GridFunction(grid, lambda s: self.func(s, 0))
             pi = GridFunction(grid, lambda s: self.func.dt(s, 0))
             xi = GridFunction(grid, lambda s: self.func.dx(s, 0))
         self.state_vector = np.array([u, pi, xi])
-
-    # def __repr__(self):
-    #     return f"{self.state_vector}"
 
     def _apply_reduction(self, reduction, *args, **kwargs):
         return reduction(self.state_vector, *args, **kwargs)
 
     def _apply_unary(self, function, *args, **kwargs):
         return type(self)(
-            function(self.state_vector, *args, **kwargs)
+            function(
+                self.state_vector,
+                *args,
+                **kwargs,
+            )
         )
 
     def _apply_binary(self, other, function, *args, **kwargs):
         # If it is a number
-        if isinstance(other, (int, float, complex, np.ndarray)):
+        if isinstance(
+            other,
+            (int, float, complex, np.ndarray),
+        ):
             return type(self)(
-                function(self.state_vector, other, *args, **kwargs)
+                function(
+                    self.state_vector,
+                    other,
+                    *args,
+                    **kwargs,
+                )
             )
 
         if isinstance(other, type(self)):
@@ -222,20 +184,3 @@ class StateVector(BaseNumerical):
             )
         # If we are here, its because we cannot add the two objects
         raise TypeError("I don't know how to combine these objects")
-
-
-def TimeGrid_from_cfl(space_grid=None, time_domain=None):
-    assert isinstance(space_grid, SingleGrid)
-    assert isinstance(time_domain, SingleDomain)
-
-    ncells_t = np.ceil(
-        (1 / globvars.CFL)
-        * (
-            (time_domain.domain[1] - time_domain.domain[0])
-            / (space_grid.domain[1] - space_grid.domain[0])
-        )
-        * space_grid.ncells
-    )
-    # round up to next integer
-    time_grid = SingleGrid(time_domain, int(ncells_t))
-    return time_grid

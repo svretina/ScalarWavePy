@@ -77,7 +77,13 @@ def convergence(
         pltm.plot_resolutions(dx_0, Result, pulse, savefigs)
     if plot_convergence:
         pltm.plot_convergence(
-            dxs, pis, xis, pi_line, xi_line, w.t[idx_eval], savefigs
+            dxs,
+            pis,
+            xis,
+            pi_line,
+            xi_line,
+            w.t[idx_eval],
+            savefigs,
         )
     return pi_line, xi_line
 
@@ -95,6 +101,9 @@ def convergence_over_time(dx_0, tf, plot=False, savefig=False):
         xi_convergence.append(xiline[0])
     if plot:
         pltm.plot_convergence_over_time(
-            time[1:], pi_convergence, xi_convergence, savefig
+            time[1:],
+            pi_convergence,
+            xi_convergence,
+            savefig,
         )
     return pi_convergence, xi_convergence
