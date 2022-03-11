@@ -131,7 +131,7 @@ class StateVector(BaseNumerical):
     @property
     def energy(self):
         tmp = self.pi ** 2 + self.xi ** 2
-        energy = tmp.integrate() / len(self.xi)
+        energy = tmp.integrate()
         return energy
 
     def _apply_reduction(self, reduction, *args, **kwargs):
