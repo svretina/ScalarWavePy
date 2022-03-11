@@ -3,9 +3,15 @@
 import numpy as np
 from scalarwavepy import ode
 from scalarwavepy import wave
-from scalarwavepy import utils
-from scalarwavepy import analytic
-from scalarwavepy import plotmod as pltm
+from scalarwavepy import (
+    utils,
+)
+from scalarwavepy import (
+    analytic,
+)
+from scalarwavepy import (
+    plotmod as pltm,
+)
 
 
 def convergence(
@@ -22,7 +28,12 @@ def convergence(
     pis = []
     xis = []
     courant_factor = 0.4
-    factor = 2 ** np.linspace(1, n, n, dtype=int)
+    factor = 2 ** np.linspace(
+        1,
+        n,
+        n,
+        dtype=int,
+    )
     if plot_resolutions:
         Result = {}
         Result[0] = t_eval
@@ -49,11 +60,23 @@ def convergence(
         numpi = state_vector[1, :, idx_eval]
         numxi = state_vector[2, :, idx_eval]
 
-        analyticpi = pulse.dt(w.x, w.t[idx_eval])
-        analyticxi = pulse.dx(w.x, w.t[idx_eval])
+        analyticpi = pulse.dt(
+            w.x,
+            w.t[idx_eval],
+        )
+        analyticxi = pulse.dx(
+            w.x,
+            w.t[idx_eval],
+        )
 
-        diffpi = utils.L2_norm(numpi - analyticpi, dxprime)
-        diffxi = utils.L2_norm(numxi - analyticxi, dxprime)
+        diffpi = utils.L2_norm(
+            numpi - analyticpi,
+            dxprime,
+        )
+        diffxi = utils.L2_norm(
+            numxi - analyticxi,
+            dxprime,
+        )
 
         dxs.append(dxprime)
         pis.append(diffpi)
@@ -70,11 +93,24 @@ def convergence(
             subresult["xi"] = numxi
             Result[i] = subresult
 
-    pi_line = np.polyfit(np.log(dxs), np.log(pis), 1)
-    xi_line = np.polyfit(np.log(dxs), np.log(xis), 1)
+    pi_line = np.polyfit(
+        np.log(dxs),
+        np.log(pis),
+        1,
+    )
+    xi_line = np.polyfit(
+        np.log(dxs),
+        np.log(xis),
+        1,
+    )
 
     if plot_resolutions:
-        pltm.plot_resolutions(dx_0, Result, pulse, savefigs)
+        pltm.plot_resolutions(
+            dx_0,
+            Result,
+            pulse,
+            savefigs,
+        )
     if plot_convergence:
         pltm.plot_convergence(
             dxs,
@@ -88,7 +124,12 @@ def convergence(
     return pi_line, xi_line
 
 
-def convergence_over_time(dx_0, tf, plot=False, savefig=False):
+def convergence_over_time(
+    dx_0,
+    tf,
+    plot=False,
+    savefig=False,
+):
     pi_convergence = []
     xi_convergence = []
     dt = 0.4 * dx_0
@@ -96,7 +137,10 @@ def convergence_over_time(dx_0, tf, plot=False, savefig=False):
     time = utils.discretize(0, tf, nt)
     for i in range(1, nt + 1):
         print(f"time[{i}] = {time[i]}")
-        piline, xiline = convergence(dx_0, tf, time[i])
+        (
+            piline,
+            xiline,
+        ) = convergence(dx_0, tf, time[i])
         pi_convergence.append(piline[0])
         xi_convergence.append(xiline[0])
     if plot:
@@ -106,4 +150,7 @@ def convergence_over_time(dx_0, tf, plot=False, savefig=False):
             xi_convergence,
             savefig,
         )
-    return pi_convergence, xi_convergence
+    return (
+        pi_convergence,
+        xi_convergence,
+    )

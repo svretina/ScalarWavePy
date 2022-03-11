@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
 import numpy as np
+from scalarwavepy import domains
+from scalarwavepy import grids
+from scalarwavepy import grid_functions as gf
+from scalarwavepy import global_vars
+from scalarwavepy import ode
 
 
 def discretize(ui, uf, nu):
@@ -41,11 +46,13 @@ def integrate(vec, dx, over="rows"):
     elif vec.ndim == 2:
         if over == "rows":
             tmp = 0.5 * (vec[0, :] + vec[-1, :]) + np.sum(
-                vec[1:-1, :], axis=0
+                vec[1:-1, :],
+                axis=0,
             )
         else:
             tmp = 0.5 * (vec[:, 0] + vec[:, -1]) + np.sum(
-                vec[:, 1:-1], axis=1
+                vec[:, 1:-1],
+                axis=1,
             )
 
     return dx * tmp
@@ -77,5 +84,29 @@ def spacing(xi, xn, n):
 
 
 def check_monotonicity(vector):
+    vector = np.atleast_1d(vector)
     dv = np.diff(vector)
     return np.all(dv > 0) or np.all(dv < 0)
+
+
+def run(final_time, ncells, domain, *args, **kwargs):
+    if np.asarray(domain).ndim > 1:
+        spatial_domain = domains.MultipleDomain(domain)
+    else:
+        spatial_domain = domains.SingleDomain(domain)
+
+    if isinstance(spatial_domain, domains.MultipleDomain):
+        spatial_grid = grids.MultipleGrid(spatial_domain, ncells)
+    else:
+        spatial_grid = grids.SingleGrid(spatial_domain, ncells)
+
+    time_domain = domains.SingleDomain([0, final_time])
+    time_grid = grids.TimeGrid_from_cfl(spatial_grid, time_domain)
+
+    f = global_vars.PULSE
+    if np.asarray(domain).ndim > 1:
+        state = gf.StateTensor(grid=spatial_grid, func=f)
+    else:
+        state = gf.StateVector(grid=spatial_grid, func=f)
+    res = ode.evolve(state, spatial_grid, time_grid, *args, **kwargs)
+    return res

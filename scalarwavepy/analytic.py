@@ -26,15 +26,11 @@ class Gaussian:
         return ff
 
     def _expr_dt(self):
-        f = self.base_expr.diff(t).subs(
-            {A: self.A, s: self.s, c: self.cntr}
-        )
+        f = self.base_expr.diff(t).subs({A: self.A, s: self.s, c: self.cntr})
         ff = lambdify((x, t), f, ["scipy", "numpy"])
         return ff
 
     def _expr_dx(self):
-        f = self.base_expr.diff(x).subs(
-            {A: self.A, s: self.s, c: self.cntr}
-        )
+        f = self.base_expr.diff(x).subs({A: self.A, s: self.s, c: self.cntr})
         ff = lambdify((x, t), f, ["scipy", "numpy"])
         return ff

@@ -1,48 +1,75 @@
 #!/usr/bin/env python3
 
+import copy
 import numpy as np
-from scalarwavepy import grid
+from scalarwavepy import grids
 from scalarwavepy import utils
+from scalarwavepy import grid_functions as gf
 
 
-def evolve(
-    state_vector,
+def get_boundary_values(
+    func,
     spatial_grid,
-    time_grid,
-    alpha=1.0 / 2.0,
+    time_instance,
 ):
-    result = np.empty((time_grid.npoints), dtype=object)
-    result[0] = state_vector
-    for i in range(time_grid.ncells):
-        ti = time_grid.coords[i]
 
-        pistar0 = state_vector.func.dt(spatial_grid.domain[0], ti)
-        pistarN = state_vector.func.dt(spatial_grid.domain[1], ti)
+    pistar0 = func.dt(spatial_grid.domain[0], time_instance)
+    # pistarN = func.dt(spatial_grid.domain[1], time_instance)
 
-        xistar0 = state_vector.func.dx(spatial_grid.domain[0], ti)
-        xistarN = state_vector.func.dx(spatial_grid.domain[1], ti)
-        ustar = pistar0 - xistar0
-        # vstar = pistarN + xistarN
-        # ustar = 0
-        vstar = 0
+    xistar0 = func.dx(spatial_grid.domain[0], time_instance)
+    # xistarN = func.dx(spatial_grid.domain[1], time_instance)
+    ustar = pistar0 - xistar0
+    vstar = 0
+    return ustar, vstar
 
-        rhs_func = rhs(spatial_grid.dx, ustar, vstar, alpha)
 
-        state_vector = utils.rk4(
-            rhs_func,
-            state_vector,
-            time_grid.spacing,
+## boundary conditions are now only set to the analytical
+## values. One thing to implement would be to get the
+def evolve(state, spatial_grid, time_grid, alpha):
+    if isinstance(spatial_grid, grids.MultipleGrid):
+        result = gf.Result(spatial_grid, time_grid)
+        result.initialize(state)
+        for j in range(time_grid.ncells):
+            ti = time_grid.coords[j]
+            for i in range(spatial_grid.ndomains):
+                ustar, vstar = get_boundary_values(
+                    state.func, spatial_grid.ugrids[i], ti
+                )
+                if i > 0:
+                    ustar = uold
+
+                rhs_func = rhs(time_grid.dx, ustar, vstar, alpha)
+                state.state_tensor[i] = utils.rk4(
+                    rhs_func, state.state_tensor[i], time_grid.dx
+                )
+                uold = (
+                    state.state_tensor[i].pi.values[-1]
+                    - state.state_tensor[i].xi.values[-1]
+                )
+                result.tensor[i, j + 1] = state.state_tensor[i]
+
+    elif isinstance(spatial_grid, grids.SingleGrid):
+        result = gf.Result(spatial_grid, time_grid)
+        result.initialize(state)
+        for i in range(time_grid.ncells):
+            ti = time_grid.coords[i]
+            ustar, vstar = get_boundary_values(state.func, spatial_grid, ti)
+
+            rhs_func = rhs(time_grid.dx, ustar, vstar, alpha)
+            state = utils.rk4(rhs_func, state, time_grid.spacing)
+            result.vector[i + 1] = state
+    else:
+        raise TypeError(
+            f"""
+            Grid can only be SingleGrid or MultipleGrid object. You passed a {type(spatial_grid)} object."""
         )
-        result[i + 1] = state_vector
     return result
 
+
 def RHS(s, dx, ustar, vstar, alpha):
-    # print("-RHS", s)
     u, pi, xi = s.state_vector
-    alpha = 1.0
-    pix = pi.differentiated()
-    xix = xi.differentiated()
-    # pi = xi
+    pix = pi.differentiated
+    xix = xi.differentiated
     # u = pi - xi
     # v = pi + xi
 
@@ -62,16 +89,11 @@ def RHS(s, dx, ustar, vstar, alpha):
     # then back to pi, xi
 
     # interior
-    # dtu = pi[:]
-    # dtpi = xix[:]
-    # dtxi = pix[:]
-    dtu = pi
-    dtpi = xix
-    dtxi = pix
-    dx = pi.grid.dx
+    dtu = copy.deepcopy(pi)
+    dtpi = copy.deepcopy(xix)
+    dtxi = copy.deepcopy(pix)
     # Weak boundary imposition
     # Left boundary
-    ## why 2dx ??
     dtpi.values[0] = xix.values[0] - (alpha / (2 * dx)) * (
         pi.values[0] - xi.values[0] - ustar
     )
@@ -86,22 +108,13 @@ def RHS(s, dx, ustar, vstar, alpha):
     dtxi.values[-1] = pix.values[-1] - (alpha / (2 * dx)) * (
         pi.values[-1] + xi.values[-1] - vstar
     )
-    # it should return a StateVector object!!!
-    sv = type(s)(np.array([dtu, dtpi, dtxi]), s.func)
-    return sv
+
+    return type(s)(
+        grid=s.grid,
+        vector=np.array([dtu, dtpi, dtxi]),
+        func=s.func,
+    )
 
 
 def rhs(dx, ustar, vstar, alpha=1.0):
     return lambda s: RHS(s, dx, ustar, vstar, alpha)
-
-
-def calculate_diagnostics(state_vector, dx):
-    _, pid, xid = state_vector[:, :, :]
-    energy = utils.integrate(pid ** 2 + xid ** 2, dx, over="rows")
-    energy_density = (1 / ud.shape[0]) * energy
-    energy_density = energy_density / energy_density[0]
-    return energy_density
-    # if utils.check_monotonicity(energy_density):
-    #     return energy_density
-    # else:
-    #     raise VallueError("Energy is not monotonically descreasing")
