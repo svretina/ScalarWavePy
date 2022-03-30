@@ -155,23 +155,29 @@ def plot_convergence_over_time(
         plt.show()
 
 
-def plot_time_evolution(time, result, start=0, step=1, gif=False):
+def plot_time_evolution(time, result, start=0, step=1, analytic=True, gif=False):
     print("Plottings time evolution")
     if result.ndomains == 1:
         n = result.shape[0]
         asol = result.vector[0].func
         spatial_grid = result.spatial_grid
-        maxpi = np.max(asol.dt(spatial_grid.coords, 0.5))
+        if analytic:
+            maxpi = np.max(asol.dt(spatial_grid.coords, 0.5))
+        else:
+            maxpi = 1.1 * np.max(result.vector[0].state_vector[1].values)
         for i in range(0, n, step):
             print(f"Time[{i}]={time.coords[i]}")
-            asolpi = asol.dt(spatial_grid.coords, time.coords[i])
-            asolxi = asol.dx(spatial_grid.coords, time.coords[i])
+            if analytic:
+                asolpi = asol.dt(spatial_grid.coords, time.coords[i])
+                asolxi = asol.dx(spatial_grid.coords, time.coords[i])
+                ax1.plot(spatial_grid.coords, asolpi, "--")
+                ax2.plot(spatial_grid.coords, asolxi, "--")
 
             fig, [ax1, ax2] = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
 
             # pi
             ax1.plot(spatial_grid.coords, result.vector[i].state_vector[1].values)
-            ax1.plot(spatial_grid.coords, asolpi, "--")
+
             ax1.set_ylim(-1.1 * maxpi, 1.1 * maxpi)
             ax1.set_xlabel(r"$\rm x$")
             ax1.set_title(r"$\pi:=\partial_t u$")
@@ -179,7 +185,6 @@ def plot_time_evolution(time, result, start=0, step=1, gif=False):
 
             # xi
             ax2.plot(spatial_grid.coords, result.vector[i].state_vector[2].values)
-            ax2.plot(spatial_grid.coords, asolxi, "--")
             ax2.set_xlabel(r"$\rm x$")
             ax2.set_title(r"$\xi:=\partial_x u$")
             ax2.set_ylim(-1.1 * maxpi, 1.1 * maxpi)
@@ -205,15 +210,20 @@ def plot_time_evolution(time, result, start=0, step=1, gif=False):
             result.tensor[0, 0].grid.coords[0], result.tensor[1, 0].grid.coords[-1], n
         )
         asol = result.tensor[0, 0].func
-        maxpi = np.max(asol.dt(xsol, 0.5))
+        if analytic:
+            maxpi = np.max(asol.dt(xsol, 0.5))
+        else:
+            maxpi = 1.1 * np.max(result.tensor[0, 0].pi.values)
+
         for i in range(start, time.npoints, step):
             print(f"Time[{i}]={time.coords[i]}")
             fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
             # analytical solution
-            asolpi = asol.dt(xsol, time.coords[i])
-            asolxi = asol.dx(xsol, time.coords[i])
-            ax1.plot(xsol, asolpi, "--", label="analytical solution")
-            ax2.plot(xsol, asolxi, "--")
+            if analytic:
+                asolpi = asol.dt(xsol, time.coords[i])
+                asolxi = asol.dx(xsol, time.coords[i])
+                ax1.plot(xsol, asolpi, "--", label="analytical solution")
+                ax2.plot(xsol, asolxi, "--")
 
             for j in range(result.shape[0]):
                 x = result.tensor[j, i].grid.coords
@@ -335,9 +345,10 @@ def plot_at_resolutions(
         plt.show()
 
 
-def plot_energy(energy, append=None, savefig=False):
+def plot_energy(result, append=None, savefig=False):
     print("Plotting energy over time.")
-
+    energy = result.energy
+    thenergy = result.theoretical_energy_derivative
     if append is None or append[0] is None:
         fig, ax = plt.subplots(nrows=2, sharex=True)
     else:
@@ -348,21 +359,38 @@ def plot_energy(energy, append=None, savefig=False):
 
     n = energy.grid.ncells
     energydt = energy.differentiated
-    ax[0].plot(energydt.grid.coords, energydt.values, "-x")
-    col = ax[0].get_lines()[-1].get_color()
-    ax[1].plot(energy.grid.coords, energy.values, "-x", color=col, label=f"N={n}")
+    ax[0].plot(energydt.grid.coords, energydt.values, "-x", label="$\partial_t E$")
+    ax[0].plot(
+        thenergy.grid.coords,
+        thenergy.values,
+        "--",
+        color="r",
+        label="theoretical $\partial_t E$",
+    )
+
+    col = ax[0].get_lines()[0].get_color()
+    ax[1].plot(energy.grid.coords, energy.values, "-x", color=col)
 
     # plot the points that correspond to increasing energy
     indexes = np.where(energydt.values > 0)
-    ax[0].plot(energydt.grid.coords[indexes], energydt.values[indexes], "rx")
-    ax[1].plot(energy.grid.coords[indexes], energy.values[indexes], "ro")
+    ax[0].plot(energydt.grid.coords[indexes], energydt.values[indexes], "yx")
+    ax[1].plot(energy.grid.coords[indexes], energy.values[indexes], "yo")
 
     ax[1].set_xlabel(r"$\rm time$")
     ax[1].set_ylabel(r"$\rm Energy$")
     ax[0].set_ylabel(r"$\rm \partial_t Energy$")
     ax[0].grid(True)
     ax[1].grid(True)
+    ax[0].legend(loc="lower right")
     ax[0].set_xlim(energy.grid.coords[0], energy.grid.coords[-1])
+    if isinstance(result.spatial_grid, grids.MultipleGrid):
+        fig.suptitle(
+            f"$N_{{cells}}=[{{{result.spatial_grid.ncells[0]}}}, {{{result.spatial_grid.ncells[1]}}}]$, $cfl={{{global_vars.CFL}}}$, $\\alpha={{{result.alpha}}}$"
+        )
+    else:
+        fig.suptitle(
+            f"$N_{{cells}}={{{result.spatial_grid.ncells[0]}}}$, $cfl={{{global_vars.CFL}}}$, $\\alpha={{{result.alpha}}}$"
+        )
     plt.tight_layout()
 
     if append:
@@ -388,7 +416,8 @@ def plot_energy_convergence(mode, rrange, savefig=False, *args, **kwargs):
             res = utils.run(
                 kwargs["final_time"], ncells, kwargs["domain"], alpha=kwargs["alpha"]
             )
-            fig, ax = plot_energy(res.energy, append=[fig, ax], savefig=False)
+
+            fig, ax = plot_energy(res, append=[fig, ax], savefig=False)
             h, l = ax[1].get_legend_handles_labels()
             a.append(f"ncells={i:.1f}")
             ax[1].legend(h, a)
@@ -398,7 +427,7 @@ def plot_energy_convergence(mode, rrange, savefig=False, *args, **kwargs):
             res = utils.run(
                 kwargs["final_time"], kwargs["ncells"], kwargs["domain"], alpha=i
             )
-            fig, ax = plot_energy(res.energy, append=[fig, ax], savefig=False)
+            fig, ax = plot_energy(res, append=[fig, ax], savefig=False)
             h, l = ax[1].get_legend_handles_labels()
             a.append(f"a={i:.1f}")
             ax[1].legend(h, a, bbox_to_anchor=(1, 2.5))

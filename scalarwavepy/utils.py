@@ -89,7 +89,11 @@ def check_monotonicity(vector):
     return np.all(dv > 0) or np.all(dv < 0)
 
 
-def run(final_time, ncells, domain, *args, **kwargs):
+def get_random(a, b, shape):
+    return (b - a) * np.random.random_sample(shape) + a
+
+
+def run(final_time, ncells, domain, noise, *args, **kwargs):
     if np.asarray(domain).ndim > 1:
         spatial_domain = domains.MultipleDomain(domain)
     else:
@@ -103,10 +107,51 @@ def run(final_time, ncells, domain, *args, **kwargs):
     time_domain = domains.SingleDomain([0, final_time])
     time_grid = grids.TimeGrid_from_cfl(spatial_grid, time_domain)
 
-    f = global_vars.PULSE
-    if np.asarray(domain).ndim > 1:
-        state = gf.StateTensor(grid=spatial_grid, func=f)
+    if not noise:
+        f = global_vars.PULSE
+        if np.asarray(domain).ndim > 1:
+            state = gf.StateTensor(grid=spatial_grid, func=f)
+        else:
+            state = gf.StateVector(grid=spatial_grid, func=f)
     else:
-        state = gf.StateVector(grid=spatial_grid, func=f)
+
+        if np.asanyarray(domain).ndim > 1:
+            u = gf.GridFunction(
+                spatial_grid.ugrids[0], get_random(-1, 1, spatial_grid.ugrids[0].shape)
+            )
+            pi = gf.GridFunction(
+                spatial_grid.ugrids[0], get_random(-1, 1, spatial_grid.ugrids[0].shape)
+            )
+            xi = gf.GridFunction(
+                spatial_grid.ugrids[0], get_random(-1, 1, spatial_grid.ugrids[0].shape)
+            )
+            u2 = gf.GridFunction(
+                spatial_grid.ugrids[1], get_random(-1, 1, spatial_grid.ugrids[1].shape)
+            )
+            pi2 = gf.GridFunction(
+                spatial_grid.ugrids[1], get_random(-1, 1, spatial_grid.ugrids[1].shape)
+            )
+            xi2 = gf.GridFunction(
+                spatial_grid.ugrids[1], get_random(-1, 1, spatial_grid.ugrids[1].shape)
+            )
+            st = np.array(
+                [
+                    gf.StateVector(
+                        grid=spatial_grid.ugrids[0], vector=np.array([u, pi, xi])
+                    ),
+                    gf.StateVector(
+                        grid=spatial_grid.ugrids[1], vector=np.array([u2, pi2, xi2])
+                    ),
+                ],
+                dtype=object,
+            )
+            state = gf.StateTensor(grid=spatial_grid, tensor=st)
+        else:
+            u = gf.GridFunction(spatial_grid, get_random(-1, 1, spatial_grid.shape))
+            pi = gf.GridFunction(spatial_grid, get_random(-1, 1, spatial_grid.shape))
+            xi = gf.GridFunction(spatial_grid, get_random(-1, 1, spatial_grid.shape))
+            sv = np.array([u, pi, xi])
+            state = gf.StateVector(grid=spatial_grid, vector=sv)
+
     res = ode.evolve(state, spatial_grid, time_grid, *args, **kwargs)
     return res

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 import numpy as np
 from scalarwavepy import utils
 from scalarwavepy import grids
@@ -51,7 +52,7 @@ class GridFunction(BaseNumerical):
 
     @property
     def differentiated(self):
-        f = self.values.copy()
+        f = copy.deepcopy(self.values)
         tmp = np.empty_like(self.values)
         tmp[1:-1] = (f[2:] - f[:-2]) / (2 * self.grid.spacing)
         tmp[0] = (f[1] - f[0]) / self.grid.spacing
@@ -63,7 +64,8 @@ class GridFunction(BaseNumerical):
         tmp = 0.5 * (vector[0] + vector[-1]) + np.sum(vector[1:-1], axis=0)
         return dx * tmp
 
-    def integrate(self):
+    @property
+    def integrated(self):
         return self._trapezoidal_rule(self.values, self.grid.dx)
 
     def norm(self):
@@ -129,10 +131,14 @@ class StateVector(BaseNumerical):
             raise ValueError("Cannot pass grid=None and vector=None")
 
     @property
+    def characteristic_variables(self):
+        return self.pi - self.xi, self.pi + self.xi
+
+    @property
     def energy(self):
         tmp = self.pi ** 2 + self.xi ** 2
-        energy = tmp.integrate()
-        return energy
+        energy1 = tmp.integrated
+        return energy1
 
     def _apply_reduction(self, reduction, *args, **kwargs):
         return reduction(self.state_vector, *args, **kwargs)
@@ -178,11 +184,7 @@ class StateTensor:
             assert grid is not None
             self.state_tensor = np.asarray(
                 [
-                    StateVector(
-                        grid.ugrids[i],
-                        tensor,
-                        func,
-                    )
+                    StateVector(grid.ugrids[i], tensor, func)
                     for i in range(grid.ndomains)
                 ],
                 dtype=object,
@@ -232,6 +234,49 @@ class Result:
         if isinstance(spatial_grid, grids.SingleGrid):
             self.vector = np.empty(time_grid.npoints, dtype=object)
             self.ndomains = 1
+
+    def set_penalty(self, alpha):
+        self.alpha = alpha
+
+    @property
+    def theoretical_energy_derivative(self):
+        if isinstance(self.spatial_grid, grids.MultipleGrid):
+            temp = np.zeros(self.time.npoints)
+            for i in range(self.time.npoints):
+                u = np.empty(2, dtype=object)
+                v = np.empty(2, dtype=object)
+                for j in range(self.ndomains):
+                    u[j], v[j] = self.tensor[j][i].characteristic_variables
+                temp[i] += 0.5 * (
+                    (1 - 2 * self.alpha) * v[0].values[-1] ** 2
+                    + (1 - 2 * self.alpha) * u[0].values[0] ** 2
+                    - v[0].values[0] ** 2
+                    - u[0].values[-1] ** 2
+                    + (1 - 2 * self.alpha) * v[1].values[-1] ** 2
+                    + (1 - 2 * self.alpha) * u[1].values[0] ** 2
+                    - v[1].values[0] ** 2
+                    - u[1].values[-1] ** 2
+                    + 2
+                    * self.alpha
+                    * (
+                        v[0].values[-1] * v[1].values[0]
+                        + u[1].values[0] * u[0].values[-1]
+                    )
+                )
+
+            self.theoretical_energy = GridFunction(self.time, temp)
+
+        if isinstance(self.spatial_grid, grids.SingleGrid):
+            temp = np.empty(self.time.npoints)
+            for i in range(self.time.npoints):
+                u, v = self.vector[i].characteristic_variables
+                temp[i] = 0.5 * (
+                    (1 - 2 * self.alpha) * v.values[-1] ** 2
+                    + (1 - 2 * self.alpha) * u.values[0] ** 2
+                    - v.values[0] ** 2
+                    - u.values[-1] ** 2
+                )
+        return GridFunction(self.time, temp)
 
     def initialize(self, state):
         if isinstance(self.spatial_grid, grids.MultipleGrid):
